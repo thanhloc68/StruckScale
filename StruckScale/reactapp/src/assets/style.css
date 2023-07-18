@@ -1,0 +1,53 @@
+body {
+}
+
+.text{
+    text-align: center;
+    padding: 20px;
+}
+.tablebox {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    padding-bottom: 10px;
+}
+
+@media screen and (max-width: 800px), screen and (max-height: 700px) {
+    .tablebox {
+        flex-direction: column;
+    }
+        .tablebox > .searchbox {
+            width: 100% !important;
+        }
+        .tablebox > .calendar {
+            width: 100% !important;
+        }
+}
+
+.input-group .form-control {
+    width: 80% !important;
+}
+
+.tablebox > .searchbox {
+    display: flex;
+    width: 50%;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.tablebox > .calendar {
+    display: flex;
+    width: 40%;
+    justify-content: space-evenly;
+}
+
+.mbsc-ios.mbsc-textfield-wrapper-box,
+.mbsc-ios.mbsc-textfield-wrapper-outline {
+    margin: 0px !important;
+}
+
+.mbsc-ios.mbsc-textfield-wrapper {
+    width: 70%;
+    border: 1px solid #000000 !important;
+}
