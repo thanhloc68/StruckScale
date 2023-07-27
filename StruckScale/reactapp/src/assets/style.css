@@ -51,3 +51,44 @@ body {
     width: 70%;
     border: 1px solid #000000 !important;
 }
+
+
+.check-scale {
+    display: flex;
+    padding: 10px;
+    border-bottom: 1px solid #b6b1b1;
+}
+
+.info-Scale {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+.info-Product {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+.info-Customer {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+.info-Notes {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+.table-box {
+    padding-top: 10px;
+    overflow-x: scroll;
+}
+.buttons > button{
+    margin-right: 5px;
+}
+
+li.nav-item:hover{
+    background: #fef8ec;
+}
