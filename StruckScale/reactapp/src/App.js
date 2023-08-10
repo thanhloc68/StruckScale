@@ -1,7 +1,6 @@
 ﻿/* eslint-disable no-unused-vars */
 /* eslint-disable react/jsx-no-undef */
 import React from 'react';
-import '@mobiscroll/react/dist/css/mobiscroll.min.css';
 import '../src/assets/style.css'
 import { Route, Routes } from "react-router-dom"
 import Home from './views/Home';

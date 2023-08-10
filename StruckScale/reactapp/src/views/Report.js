@@ -1,43 +1,50 @@
-﻿import React from 'react';
+﻿/* eslint-disable no-unused-vars */
+import React from 'react';
 import { useEffect, useState } from "react"
 import ReactPaginate from 'react-paginate';
-import '@mobiscroll/react/dist/css/mobiscroll.min.css';
-import { Datepicker, setOptions } from '@mobiscroll/react';
 import { ExportToExcel } from '../components/ExportToExcel';
 import '../assets/style.css'
-setOptions({
-    theme: 'ios',
-    themeVariant: 'light'
-});
+import { format } from 'date-fns';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import axios from 'axios';
+
 const Report = () => {
     const [struckScale, setStruckScale] = useState([])
     const [dataExcel, setdataExcel] = useState([])
     const [pageCount, setPageCount] = useState(1)
     const [searchInput, setSearchInput] = useState('');
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [rangeDate, setrangeDate] = useState(new Date());
     const fileName = "Report"
-    let limit = 10;
+    let limit = 12;
     useEffect(() => {
-        const getList = async () => {
-            //const res = await fetch('https://100.100.100.132:7007/api/Home/get?pg=1&pageSize=' + limit);
-            const res = await fetch('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit);
-            const data = await res.json();
-            const total = data.totalPages;
-            setPageCount(Math.ceil(total / limit));
-            setStruckScale(data.data)
-        };
         getList();
     }, []);
-    const fetchData = async (currentPage) => {
-        const res = await fetch('https://localhost:7007/api/Home/get?pg=' + currentPage + '&pageSize=' + limit);
-        const data = await res.json();
-        return data.data;
+    const getList = async () => {
+        const res = await axios('https://localhost:7007/api/Home/getAll?pg=1&pageSize=' + limit)
+            .then(x => {
+                const total = x.data.totalPages;
+                setPageCount(Math.ceil(total / limit));
+                setStruckScale(x.data.data)
+            })
+
     };
-    const getValueDateTime = async (data) => {
-        let rangeDateValue = data.valueText
-        const res = await fetch('https://localhost:7007/api/Home/GetDataByDate/' + rangeDateValue)
-        const datafetch = await res.json();
-        setdataExcel(datafetch);
-        return data;
+    const fetchData = async (currentPage) => {
+        const res = await axios('https://localhost:7007/api/Home/getAll?pg=' + currentPage + '&pageSize=' + limit);
+        return res.data.data;
+    };
+    const getValueDateTime = async ([newStartDate, newEndDate]) => {
+        try {
+            setStartDate(newStartDate);
+            setEndDate(newEndDate);
+            let rangeDate = newStartDate.toLocaleDateString("es-CL") + " - " + newEndDate.toLocaleDateString("es-CL");
+            const res = await axios.get('https://localhost:7007/api/Home/GetDataByDate/' + rangeDate)
+                .then(x => setdataExcel(x.data))
+        } catch (e) {
+            console.log(e)
+        }
     }
     const handlePageClick = async (data) => {
         let currentPage = data.selected + 1
@@ -64,54 +71,63 @@ const Report = () => {
                     </div>
                 </div>
                 <div className="calendar">
-                    <Datepicker onChange={getValueDateTime}
-                        name="getDate"
-                        controls={['calendar']}
-                        select="range"
-                        calendarType="month"
-                        pages={2}
-                        dateFormat='DD-MM-YYYY'
-                        inputProps={{
-                            placeholder: 'Please Select Range Date...'
-                        }}
+                    <DatePicker
+                        selected={startDate}
+                        onChange={getValueDateTime}
+                        selectsRange
+                        startDate={startDate}
+                        endDate={endDate}
+                        isClearable={true}
+                        dateFormat="dd/MM/yyyy"
+                        showMonthDropdown
+                        fixedHeight
                     />
                     <ExportToExcel apiData={dataExcel} fileName={fileName} />
                 </div>
             </div>
             <div className="row">
                 <div className="col-sm-12">
-                    <table className="table table-striped table-bordered table-hover table-responsive">
-                        <thead className="thead-light">
-                            <tr>
-                                <th>Số xe</th>
-                                <th>Khách Hàng</th>
-                                <th>Chứng Từ</th>
-                                <th>Số lần cân 1</th>
-                                <th>Số lần cân 2</th>
-                                <th>Kết quả</th>
-                                <th>Ngày giờ cân lần 1</th>
-                                <th>Ngày giờ cân lần 2</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                struckScale.filter((item) => {
+                    <div className="table-responsive-scale" style={{ maxHeight: '600px !important'} }>
+                        <table className="table table-striped table-bordered table-hover">
+                            <thead className="thead-light">
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Số xe</th>
+                                    <th>Khách Hàng</th>
+                                    <th>Chứng Từ</th>
+                                    <th>Hàng Hóa</th>
+                                    <th>Cân lần 1</th>
+                                    <th>Cân lần 2</th>
+                                    <th>Kết quả</th>
+                                    <th>Ngày giờ cân lần 1</th>
+                                    <th>Ngày giờ cân lần 2</th>
+                                    <th>Loại nhập</th>
+                                    <th>Ghi chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {struckScale.filter((item) => {
                                     return searchInput.toLowerCase() === '' ? item : item.customer.toLowerCase().includes(searchInput.toLowerCase()) || item.carNumber.toLowerCase().includes(searchInput.toLowerCase());
-                                }).map((item) => (
+                                }).map((item, index) => (
                                     <tr key={item.id}>
+                                        <td>{index + 1}</td>
                                         <td>{item.carNumber}</td>
+                                        <td>{item.documents}</td>
                                         <td>{item.customer}</td>
-                                        <td>{item.document}</td>
+                                        <td>{item.product}</td>
                                         <td>{item.firstScale}</td>
                                         <td>{item.secondScale}</td>
-                                        <td>{item.result}</td>
-                                        <td>{item.firstScaleDate}</td>
-                                        <td>{item.secondScaleDate}</td>
+                                        <td>{item.results}</td>
+                                        <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString()) : ''}</td>
+                                        <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString()) : ''}</td>
+                                        <td>{item.styleScale}</td>
+                                        <td>{item.notes}</td>
                                     </tr>
                                 ))
-                            }
-                        </tbody>
-                    </table>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                     <nav aria-label="Page navigation example">
                         <ReactPaginate
                             previousLabel={'<'}
