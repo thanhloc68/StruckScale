@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Project\\StruckScale\\webapi\\webapi.csproj": {}
+    "D:\\Project\\StruckScale\\StruckScale\\webapi\\webapi.csproj": {}
   },
   "projects": {
-    "D:\\Project\\StruckScale\\webapi\\webapi.csproj": {
+    "D:\\Project\\StruckScale\\StruckScale\\webapi\\webapi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Project\\StruckScale\\webapi\\webapi.csproj",
+        "projectUniqueName": "D:\\Project\\StruckScale\\StruckScale\\webapi\\webapi.csproj",
         "projectName": "webapi",
-        "projectPath": "D:\\Project\\StruckScale\\webapi\\webapi.csproj",
+        "projectPath": "D:\\Project\\StruckScale\\StruckScale\\webapi\\webapi.csproj",
         "packagesPath": "C:\\Users\\Emerson\\.nuget\\packages\\",
-        "outputPath": "D:\\Project\\StruckScale\\webapi\\obj\\",
+        "outputPath": "D:\\Project\\StruckScale\\StruckScale\\webapi\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Emerson\\AppData\\Roaming\\NuGet\\NuGet.Config",

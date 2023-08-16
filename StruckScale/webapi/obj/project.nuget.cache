@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "+iqp8STeBsKW1cnVL7aVEmA4R/Y0gLNtpPYQ+Vic/EGzDqoWaPDLtNEFDvqD2m/0fa0dA63s3JlZEAlJMo4/9w==",
+  "dgSpecHash": "RIpvGfUyyAM1f+Iw9psXNlDC/GbZIMurVwDoyR8RWVHsZUDJddCUFAdSis1ohqlB3TFltr+U6Gjq1Dx+AgX3dQ==",
   "success": true,
-  "projectFilePath": "D:\\Project\\StruckScale\\webapi\\webapi.csproj",
+  "projectFilePath": "D:\\Project\\StruckScale\\StruckScale\\webapi\\webapi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Emerson\\.nuget\\packages\\azure.core\\1.24.0\\azure.core.1.24.0.nupkg.sha512",
     "C:\\Users\\Emerson\\.nuget\\packages\\azure.identity\\1.6.0\\azure.identity.1.6.0.nupkg.sha512",

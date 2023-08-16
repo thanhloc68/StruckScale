@@ -1,2 +1,4 @@
 D:\Project\StruckScale\reactapp\obj\Debug\reactapp.esproj.SuggestedBindingRedirects.cache
 D:\Project\StruckScale\reactapp\obj\Debug\reactapp.esproj.CoreCompileInputs.cache
+D:\Project\StruckScale\StruckScale\reactapp\obj\Debug\reactapp.esproj.SuggestedBindingRedirects.cache
+D:\Project\StruckScale\StruckScale\reactapp\obj\Debug\reactapp.esproj.CoreCompileInputs.cache

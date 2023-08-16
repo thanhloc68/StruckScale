@@ -20,7 +20,7 @@ const ScaleStruck = () => {
     const [struckScale, setStruckScale] = useState([])
     //Đếm trang
     const [pageCount, setPageCount] = useState(1)
-    //Lấy dữ liệu lên input
+    //Lấy dữ liệu lên input text
     const [getDataInput, setDataInput] = useState([{
         id: 0,
         ordinalNumber: 0,
@@ -37,7 +37,9 @@ const ScaleStruck = () => {
         styleScale: "",
         isDel: "",
     }]);
+    //Nhập số cân bằng checkbox
     const [isCheckbox, setCheckbox] = useState(false);
+    //Lấy trang hiện tại
     const [currentPageClick, setCurrentPageClick] = useState(1);
     //Lấy dữ liệu khách hàng
     const [selectCustomer, setSelectCustomer] = useState([]);
@@ -52,14 +54,41 @@ const ScaleStruck = () => {
         shortcutName: "",
         name: "",
     }]);
+    //set cờ cân lần 1 lần 2
+    const [isFirstScale, setIsFirstScale] = useState(false);
+    const [isSecondScale, setIsSecondScale] = useState(false);
 
 
     useEffect(() => {
         getList();
         getListProduct();
         getListCustomer();
-        //loadOptions();
-    }, []);
+        let interval = null;
+        if (isFirstScale) {
+            interval = setInterval(() => {
+                getNumScale();
+            }, 2000);
+        }
+        if (isSecondScale) {
+            interval = setInterval(() => {
+                getNumScale();
+            }, 2000);
+        }
+        return () => clearInterval(interval);
+
+    }, [isFirstScale, isSecondScale]);
+
+    //Lấy api số cân
+    const getNumScale = async () => {
+        if (isFirstScale == true) {
+            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel1.Device1.tag1')
+                .then(res => setDataInput((prev) => ({ ...prev, firstScale: res.data.readResults[0].v })))
+        }
+        if (isFirstScale == false && isSecondScale == true) {
+            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel1.Device1.tag1')
+                .then(res => setDataInput((prev) => ({ ...prev, secondScale: res.data.readResults[0].v })))
+        }
+    }
     //Lấy danh sách cân
     const getList = async () => {
         await axios.get('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit)
@@ -77,23 +106,6 @@ const ScaleStruck = () => {
         const response = await axios.get('https://localhost:7007/api/Home/get?pg=' + currentPageClick + '&pageSize=' + limit)
         setStruckScale(response.data.data)
     };
-
-    //const loadOptions = inputValue =>
-    //    new Promise(resolve => {
-    //        console.log('on load options function')
-    //        axios.get('https://localhost:7007/api/Product/get')
-    //            .then((response) => {
-    //                const options = []
-    //                console.log(response.data)
-    //                response.data.forEach((e) => {
-    //                    options.push({
-    //                        label: e.shortName,
-    //                        value: e.name
-    //                    })
-    //                })
-    //                resolve(options);
-    //            })
-    //    });
     const handlePageClick = async (data) => {
         let selectPage = data.selected + 1;
         setCurrentPageClick(selectPage);
@@ -126,9 +138,23 @@ const ScaleStruck = () => {
             isDel: data?.isDel,
             styleScale: data?.styleScale
         });
+        if (isFirstScale == false && isSecondScale == false && data.firstScale <= 0 && data.secondScale <= 0) {
+            setIsFirstScale(true);
+            setIsSecondScale(false);
+        }
+        if (data.firstScale > 0 && data.secondScale <= 0) {
+            setIsFirstScale(false);
+            setIsSecondScale(true);
+        }
+        if (data.firstScale > 0 && data.secondScale > 0) {
+            setIsFirstScale(false);
+            setIsSecondScale(false);
+        }
     }
     const handleRefresh = async () => {
         setCheckbox(false);
+        setIsFirstScale(false);
+        setIsSecondScale(false);
         setDataInput({
             id: 0,
             ordinalNumber: 0,
@@ -204,7 +230,6 @@ const ScaleStruck = () => {
             .catch(error => { toast.error(`Error: ${error.message}`) })
         console.log(response);
     }
-
     //Lấy danh sách khách hàng
     const getListCustomer = async () => {
         const customer = await axios.get('https://localhost:7007/api/Customer/get')
@@ -269,7 +294,6 @@ const ScaleStruck = () => {
         console.log(response);
     }
     //Lấy dữ liệu trong pop up product
- 
     const handleAddPopupProduct = async (e) => {
         e.preventDefault();
         const input = {
@@ -299,7 +323,6 @@ const ScaleStruck = () => {
             .catch(error => { toast.error(`Error: ${error.message}`) })
         console.log(response);
     }
-
     return (
         <>
             <form method="post" onSubmit={handleSubmit}>
@@ -538,7 +561,7 @@ const ScaleStruck = () => {
                                         <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString()) : ''}</td>
                                         <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString()) : ''}</td>
                                         <td>{item.styleScale}</td>
-                                        <td style={{wordBreak:'break-all'}}>{item.notes}</td>
+                                        <td style={{ wordBreak: 'break-all' }}>{item.notes}</td>
                                     </tr>
                                 ))}
                             </tbody>
