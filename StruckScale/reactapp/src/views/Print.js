@@ -4,8 +4,6 @@ import React from 'react'
 import ReactToPrint from 'react-to-print';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
-
-
 class Print extends React.Component {
 
     newDate = new Date().toLocaleDateString();
@@ -35,9 +33,13 @@ class Print extends React.Component {
                             <div style={{ padding: '0 0 0 80px', fontSize: '22px', fontWeight: 'bold' }}>PHIẾU CÂN XE &emsp;&emsp; </div>
                             <div style={{ padding: '0 0 0 20px', fontSize: '15px' }}>STT: {this.props.index} </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column', }} >
-                            <div style={{ fontSize: '15px' }}>Loại hàng: {this.props.product}</div>
-                            <div style={{ fontSize: '15px' }}>Khách hàng: {this.props.customer}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px' }}>
+                            <div className="dt">Loại hàng:</div>
+                            <span>{this.props.product}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '15px' }}>
+                            <div className="dt">Khách hàng:</div>
+                            <span>{this.props.customer}</span>
                         </div>
                         <div style={{ display: 'flex', padding: '20px 20px 20px 50px' }}>
                             <table style={{ fontSize: '15px', padding: '20px', width: '100%' }} >
@@ -56,7 +58,6 @@ class Print extends React.Component {
                                     <td style={{ fontWeight: 'bold' }}>: {this.props.firstScale ? (this.props.firstScale).toLocaleString('en-US') : ''} Kg</td>
                                     <td>- Ngày giờ:</td>
                                     <td>: {this.props.secondScaleDate ? new Date(this.props.secondScaleDate).toLocaleString() : ''}</td>
-
                                 </tr>
                                 <tr>
                                     <td>- Trọng lượng hàng</td>
@@ -83,7 +84,6 @@ class Print extends React.Component {
                         </div>
                     </div>
                 </div>
-
             </>
         )
     }

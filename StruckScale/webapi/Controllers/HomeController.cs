@@ -20,13 +20,10 @@ namespace webapi.Controllers
             this.dbContext = dbContext;
         }
         [HttpGet("getAll")]
-        public async Task<IActionResult> GetAllList(int pg = 1, int pageSize = 12)
+        public async Task<IActionResult> GetAllList()
         {
             var list = await dbContext.info.OrderByDescending(x => x.id).ToListAsync();
-            var totalCount = list.Count;
-            var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
-            var listPerPage = list.Skip((pg - 1) * pageSize).Take(pageSize).ToList();
-            return Ok(new PagedResponse<List<struckScaleInfo>>(listPerPage, totalCount, pg, pageSize));
+            return Ok(list);
         }
         [HttpGet("get")]
         public async Task<IActionResult> GetList(int pg = 1, int pageSize = 12)

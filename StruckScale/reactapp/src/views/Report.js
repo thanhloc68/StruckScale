@@ -12,29 +12,24 @@ import axios from 'axios';
 const Report = () => {
     const [struckScale, setStruckScale] = useState([])
     const [dataExcel, setdataExcel] = useState([])
-    const [pageCount, setPageCount] = useState(1)
     const [searchInput, setSearchInput] = useState('');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
-    const [rangeDate, setrangeDate] = useState(new Date());
+    const [pageNumber, setPageNumber] = useState(0);
     const fileName = "Report"
     let limit = 12;
+    const pagesVisited = pageNumber * limit;
     useEffect(() => {
         getList();
     }, []);
     const getList = async () => {
-        const res = await axios('https://localhost:7007/api/Home/getAll?pg=1&pageSize=' + limit)
-            .then(x => {
-                const total = x.data.totalPages;
-                setPageCount(Math.ceil(total / limit));
-                setStruckScale(x.data.data)
-            })
-
+        const res = await axios('https://localhost:7007/api/Home/getAll').then(x => { setStruckScale(x.data) })
     };
-    const fetchData = async (currentPage) => {
-        const res = await axios('https://localhost:7007/api/Home/getAll?pg=' + currentPage + '&pageSize=' + limit);
-        return res.data.data;
-    };
+    const pageCount = Math.ceil(
+        struckScale.filter((item) => {
+            return searchInput.toLowerCase() === '' ? item : item.customer.toLowerCase().includes(searchInput.toLowerCase()) || item.carNumber.toLowerCase().includes(searchInput.toLowerCase());
+        }).length / limit
+    );
     const getValueDateTime = async ([newStartDate, newEndDate]) => {
         try {
             setStartDate(newStartDate);
@@ -48,8 +43,7 @@ const Report = () => {
     }
     const handlePageClick = async (data) => {
         let currentPage = data.selected + 1
-        const getlistinfo = await fetchData(currentPage)
-        setStruckScale(getlistinfo)
+        setPageNumber(currentPage - 1);
     }
 
     return (
@@ -60,7 +54,7 @@ const Report = () => {
             <div className="tablebox">
                 <div className="searchbox">
                     <div className="input-group">
-                        <input type="text" className="form-control" placeholder="Search" onChange={(e) => setSearchInput(e.target.value)} onInput={(e) => setSearchInput(e.target.value)} aria-label="Search"
+                        <input type="text" className="form-control" placeholder="Search" onChange={(e) => setSearchInput(e.target.value)} onInput={(e) => { setSearchInput(e.target.value), handlePageClick({ selected: 0 }) }} aria-label="Search"
                             aria-describedby="button-addon2" />
                         <button className="btn btn-outline-secondary" type="button" id="button-addon2">
                             <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
@@ -87,7 +81,7 @@ const Report = () => {
             </div>
             <div className="row">
                 <div className="col-sm-12">
-                    <div className="table-responsive-scale" style={{ maxHeight: '600px !important'} }>
+                    <div className="table-responsive-scale" style={{ maxHeight: '600px !important' }}>
                         <table className="table table-striped table-bordered table-hover">
                             <thead className="thead-light">
                                 <tr>
@@ -108,22 +102,24 @@ const Report = () => {
                             <tbody>
                                 {struckScale.filter((item) => {
                                     return searchInput.toLowerCase() === '' ? item : item.customer.toLowerCase().includes(searchInput.toLowerCase()) || item.carNumber.toLowerCase().includes(searchInput.toLowerCase());
-                                }).map((item, index) => (
-                                    <tr key={item.id}>
-                                        <td>{index + 1}</td>
-                                        <td>{item.carNumber}</td>
-                                        <td>{item.documents}</td>
-                                        <td>{item.customer}</td>
-                                        <td>{item.product}</td>
-                                        <td>{item.firstScale}</td>
-                                        <td>{item.secondScale}</td>
-                                        <td>{item.results}</td>
-                                        <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString()) : ''}</td>
-                                        <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString()) : ''}</td>
-                                        <td>{item.styleScale}</td>
-                                        <td>{item.notes}</td>
-                                    </tr>
-                                ))
+                                })
+                                    .slice(pagesVisited, pagesVisited + limit)
+                                    .map((item, index) => (
+                                        <tr key={item.id}>
+                                            <td>{index + 1}</td>
+                                            <td>{item.carNumber}</td>
+                                            <td>{item.customer}</td>
+                                            <td>{item.documents}</td>
+                                            <td>{item.product}</td>
+                                            <td>{item.firstScale ? item.firstScale.toLocaleString('en-US') : ''}</td>
+                                            <td>{item.secondScale ? item.secondScale.toLocaleString('en-US') : ''}</td>
+                                            <td>{item.results ? item.results.toLocaleString('en-US') : ''}</td>
+                                            <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString()) : ''}</td>
+                                            <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString()) : ''}</td>
+                                            <td>{item.styleScale}</td>
+                                            <td>{item.notes}</td>
+                                        </tr>
+                                    ))
                                 }
                             </tbody>
                         </table>

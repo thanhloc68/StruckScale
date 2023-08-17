@@ -162,3 +162,6 @@ li.nav-item:hover {
     height:36px;
     text-align: center;
 }
+.dt::after {
+    content: '';
+}

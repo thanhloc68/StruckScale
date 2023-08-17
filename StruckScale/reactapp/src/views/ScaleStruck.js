@@ -81,11 +81,11 @@ const ScaleStruck = () => {
     //Lấy api số cân
     const getNumScale = async () => {
         if (isFirstScale == true) {
-            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel1.Device1.tag1')
+            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
                 .then(res => setDataInput((prev) => ({ ...prev, firstScale: res.data.readResults[0].v })))
         }
         if (isFirstScale == false && isSecondScale == true) {
-            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel1.Device1.tag1')
+            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
                 .then(res => setDataInput((prev) => ({ ...prev, secondScale: res.data.readResults[0].v })))
         }
     }
