@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using webapi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,20 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+//builder.Services.AddHsts(options =>
+//{
+//    options.Preload = true;
+//    options.IncludeSubDomains = true;
+//    options.MaxAge = TimeSpan.FromDays(60);
+//    options.ExcludedHosts.Add("https://100.100.100.123:7007");
+//});
+
+//builder.Services.AddHttpsRedirection(options =>
+//{
+//    options.RedirectStatusCode = (int)HttpStatusCode.TemporaryRedirect;
+//    options.HttpsPort = 5001;
+//});
 
 builder.Services.AddDbContext<scaleInfo>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("InfoStringConnection")));

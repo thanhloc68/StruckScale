@@ -1,4 +1,5 @@
-﻿/* eslint-disable no-unused-vars */
+﻿/* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
 /* eslint-disable no-constant-condition */
 import React, { useEffect, useState } from "react"
 import ReactPaginate from "react-paginate";
@@ -13,7 +14,6 @@ import Loading from "../components/Loading";
 import PopUpCenter from "../components/popupcustomer";
 
 const ScaleStruck = () => {
-
     let limit = 12;
     const [loading, setLoading] = useState(true)
     //Lấy dữ liệu từ danh sách cân
@@ -57,7 +57,7 @@ const ScaleStruck = () => {
     //set cờ cân lần 1 lần 2
     const [isFirstScale, setIsFirstScale] = useState(false);
     const [isSecondScale, setIsSecondScale] = useState(false);
-
+    const [changeColor, setChangeColor] = useState(-1);
 
     useEffect(() => {
         getList();
@@ -77,33 +77,58 @@ const ScaleStruck = () => {
         return () => clearInterval(interval);
 
     }, [isFirstScale, isSecondScale]);
-
     //Lấy api số cân
     const getNumScale = async () => {
-        if (isFirstScale == true) {
-            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
-                .then(res => setDataInput((prev) => ({ ...prev, firstScale: res.data.readResults[0].v })))
-        }
-        if (isFirstScale == false && isSecondScale == true) {
-            await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
-                .then(res => setDataInput((prev) => ({ ...prev, secondScale: res.data.readResults[0].v })))
+        try {
+            if (isFirstScale == true) {
+                //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
+                await axios.get('https://100.100.100.123:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Access-Control-Allow-Origin": "*",
+                    },
+                })
+                    .then(res => setDataInput((prev) => ({ ...prev, firstScale: res.data.readResults[0].v })))
+                    .catch(err => { return toast.error(err) })
+            }
+            if (isFirstScale == false && isSecondScale == true) {
+                //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
+                await axios.get('https://100.100.100.123:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Access-Control-Allow-Origin": "100.100.100.123:39320",
+                    },
+                })
+                    .then(res => setDataInput((prev) => ({ ...prev, secondScale: res.data.readResults[0].v })))
+                    .catch(err => { return toast.error(err) })
+            }
+        } catch (e) {
+            return toast.error(e)
         }
     }
     //Lấy danh sách cân
     const getList = async () => {
-        await axios.get('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit)
-            .then(res => {
-                const total = res.data.totalPages;
-                setPageCount(Math.ceil(total / limit));
-                setStruckScale(res.data.data);
-                setLoading(false);
-            });
+        //await axios.get('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit)
+        await axios.get('https://100.100.100.123:7007/api/Home/get?pg=1&pageSize=' + limit, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Access-Control-Allow-Origin": "*",
+            },
+        }).then(res => {
+            const total = res.data.totalPages;
+            setPageCount(Math.ceil(total / limit));
+            setStruckScale(res.data.data);
+            setLoading(false);
+        }).catch(err => { return toast.error(err) });
     };
     const fetchData = async (currentPageClick) => {
-        //const res = await fetch('https://localhost:7007/api/Home/get?pg=' + currentPage + '&pageSize=' + limit);
-        //const data = await res.json();
-        //return data.data;
-        const response = await axios.get('https://localhost:7007/api/Home/get?pg=' + currentPageClick + '&pageSize=' + limit)
+        const response = await axios.get('https://100.100.100.123:7007/api/Home/get?pg=' + currentPageClick + '&pageSize=' + limit, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Access-Control-Allow-Origin": "*",
+            },
+        })
+            .catch(err => { return toast.error(err) })
         setStruckScale(response.data.data)
     };
     const handlePageClick = async (data) => {
@@ -138,7 +163,7 @@ const ScaleStruck = () => {
             isDel: data?.isDel,
             styleScale: data?.styleScale
         });
-        if (isFirstScale == false && isSecondScale == false && data.firstScale <= 0 && data.secondScale <= 0) {
+        if (isFirstScale == false && isSecondScale == false || isSecondScale == true && data.firstScale <= 0 && data.secondScale <= 0) {
             setIsFirstScale(true);
             setIsSecondScale(false);
         }
@@ -151,10 +176,16 @@ const ScaleStruck = () => {
             setIsSecondScale(false);
         }
     }
+    const colorChangeBox = async (selected) => {
+        if (selected != undefined) {
+            setChangeColor(selected)
+        }
+    }
     const handleRefresh = async () => {
         setCheckbox(false);
         setIsFirstScale(false);
         setIsSecondScale(false);
+        setChangeColor(-1);
         setDataInput({
             id: 0,
             ordinalNumber: 0,
@@ -172,6 +203,7 @@ const ScaleStruck = () => {
             isDel: true
         });
     }
+    //Thêm Thông tin khách hàng
     const handleAdd = async (e) => {
         e.preventDefault();
         const input = {
@@ -193,13 +225,14 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://localhost:7007/api/Home/post', input, headers)
+        await axios.post('https://100.100.100.123:7007/api/Home/post', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getList(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
+    //Xóa thông tin khách hàng
     const onDeleteScale = async (id) => {
         try {
-            const response = await axios.delete('https://localhost:7007/api/Home?id=' + id)
+            const response = await axios.delete('https://100.100.100.123:7007/api/Home?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), fetchData(currentPageClick), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setStruckScale(struckScale.filter(struckScale => struckScale.id !== id || struckScale.isDel == false));
@@ -221,24 +254,37 @@ const ScaleStruck = () => {
             }, 500)
         }
         else {
-            toast.error("Lỗi")
+            return toast.error("Lỗi")
         }
     }
+    // Cập nhật số cân lần 1, lần 2
     const updateScale = async () => {
-        const response = axios.put('https://localhost:7007/api/Home/' + getDataInput.id, getDataInput)
-            .then(res => { toast.success("Cập nhật cân thành công"), fetchData(currentPageClick), handleRefresh() })
+        const response = axios.put('https://100.100.100.123:7007/api/Home/' + getDataInput.id, getDataInput)
+            .then(res => {
+                toast.success("Cập nhật cân thành công");
+                fetchData(currentPageClick);
+                if (isFirstScale == true && isSecondScale == false) {
+                    setIsFirstScale(false);
+                    setIsSecondScale(true);
+                }
+                if (isFirstScale == false && isSecondScale == true) {
+                    setIsFirstScale(false);
+                    setIsSecondScale(false);
+                }
+            })
             .catch(error => { toast.error(`Error: ${error.message}`) })
-        console.log(response);
     }
     //Lấy danh sách khách hàng
     const getListCustomer = async () => {
-        const customer = await axios.get('https://localhost:7007/api/Customer/get')
+        const customer = await axios.get('https://100.100.100.123:7007/api/Customer/get')
             .then(res => setSelectCustomer(res.data))
+            .catch(err => { return toast.error(err) })
     }
     //Lấy danh sách sản phẩm
     const getListProduct = async () => {
-        const product = await axios.get('https://localhost:7007/api/Product/get')
+        const product = await axios.get('https://100.100.100.123:7007/api/Product/get')
             .then(res => setSelectProduct(res.data))
+            .catch(err => { return toast.error(err) })
     }
     //Lấy dữ liệu trong pop up customer
     const setValueData = async (data) => {
@@ -257,18 +303,18 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://localhost:7007/api/Customer/add-customer', input, headers)
+        await axios.post('https://100.100.100.123:7007/api/Customer/add-customer', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getListCustomer(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
     const onDeleteCustomer = async (id) => {
         try {
-            const response = await axios.delete('https://localhost:7007/api/Customer/delete?id=' + id)
+            const response = await axios.delete('https://100.100.100.123:7007/api/Customer/delete?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), getListCustomer(), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setSelectCustomer(selectCustomer.filter(selectCustomer => selectCustomer.id !== id));
         } catch (error) {
-            console.log(error);
+            return toast.error(error)
         }
     }
     const handleOnChangePopup = (event) => {
@@ -288,10 +334,9 @@ const ScaleStruck = () => {
         })
     }
     const updatePopup = async () => {
-        const response = axios.put('https://localhost:7007/api/Customer/' + getDataPopup.id, getDataPopup)
+        const response = axios.put('https://100.100.100.123:7007/api/Customer/' + getDataPopup.id, getDataPopup)
             .then(res => { toast.success("Cập nhật cân thành công"), getListCustomer(), handleRefreshPopup() })
             .catch(error => { toast.error(`Error: ${error.message}`) })
-        console.log(response);
     }
     //Lấy dữ liệu trong pop up product
     const handleAddPopupProduct = async (e) => {
@@ -303,25 +348,24 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://localhost:7007/api/Product/add-product', input, headers)
+        await axios.post('https://100.100.100.123:7007/api/Product/add-product', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getListProduct(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
     const onDeleteProduct = async (id) => {
         try {
-            const response = await axios.delete('https://localhost:7007/api/Product/delete?id=' + id)
+            const response = await axios.delete('https://100.100.100.123:7007/api/Product/delete?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), getListProduct(), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setSelectProduct(selectProduct.filter(selectProduct => selectProduct.id !== id));
         } catch (error) {
-            console.log(error);
+            return toast.error(error)
         }
     }
     const updatePopupProduct = async () => {
-        const response = axios.put('https://localhost:7007/api/Product/' + getDataPopup.id, getDataPopup)
+        const response = axios.put('https://100.100.100.123:7007/api/Product/' + getDataPopup.id, getDataPopup)
             .then(res => { toast.success("Cập nhật cân thành công"), getListProduct(), handleRefreshPopup() })
             .catch(error => { toast.error(`Error: ${error.message}`) })
-        console.log(response);
     }
     return (
         <>
@@ -341,37 +385,37 @@ const ScaleStruck = () => {
                     <div className="col-md-10">
                         <div className="input-group">
                             <div className="col-md-3 px-2">
-                                <div className="input-group align-items-center">
+                                <div className="form-check">
                                     <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</span>
                                     <input type="text" className="form-control" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', width: '76% !important', fontSize: '50px' }} />
+                                        style={{ textAlign: 'center', fontSize: '50px' }} />
                                 </div>
                             </div>
                             <div className="col-md-3 px-2">
-                                <div className="input-group align-items-center">
+                                <div className="form-check">
                                     <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 1</span>
                                     <input type="text" className="form-control" id="firstScale" name="firstScale" placeholder="#######" value={getDataInput.firstScale ? (getDataInput.firstScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', width: '76% !important', fontSize: '50px' }} />
+                                        style={{ textAlign: 'center', fontSize: '50px' }} />
                                     <div className="w-100 text-center">
                                         <span>{getDataInput.firstScaleDate ? new Date(getDataInput.firstScaleDate).toLocaleString() : ''}</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="col-md-3 px-2">
-                                <div className="input-group align-items-center">
+                                <div className="form-check">
                                     <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 2</span>
                                     <input type="text" className="form-control" id="secondScale" name="secondScale" placeholder="#######" value={getDataInput.secondScale ? (getDataInput.secondScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', width: '76% !important', fontSize: '50px' }} />
+                                        style={{ textAlign: 'center', fontSize: '50px' }} />
                                     <div className="w-100 text-center">
                                         <span>{getDataInput.secondScaleDate ? new Date(getDataInput.secondScaleDate).toLocaleString() : ''}</span>
                                     </div>
                                 </div>
                             </div>
                             <div className="col-md-3 px-2">
-                                <div className="input-group align-items-center">
+                                <div className="form-check">
                                     <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng hàng</span>
-                                    <input type="text" className="form-control" placeholder="#######" value={getDataInput.results ? (getDataInput.results).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', width: '76% !important', fontSize: '50px' }} disabled />
+                                    <input type="text" className="form-control" placeholder="#######" value={Math.abs(getDataInput.firstScale - getDataInput.secondScale) ? (Math.abs(getDataInput.firstScale - getDataInput.secondScale)).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
+                                        style={{ textAlign: 'center', fontSize: '50px' }} disabled />
                                     <div className="w-100 text-center">
                                         <span>{getDataInput.styleScale}</span>
                                     </div>
@@ -391,6 +435,18 @@ const ScaleStruck = () => {
                                         </div>
                                         <div className="w-75">
                                             <input type="text" style={{ width: '85%' }} className="form-control" id="carNumber" name="carNumber" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)} placeholder="Nhập số xe" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="info-Document">
+                                <div className="w-100">
+                                    <div className="d-flex align-items-center">
+                                        <div className="w-25">
+                                            <label style={{ color: 'blue', fontWeight: 'bold' }}>Chứng Từ</label>
+                                        </div>
+                                        <div className="w-75">
+                                            <input type="text" style={{ width: '85%' }} className="form-control" id="documents" name="documents" value={getDataInput.documents} onChange={(e) => handleOnChange(e)} placeholder="Nhập chứng từ" required />
                                         </div>
                                     </div>
                                 </div>
@@ -450,18 +506,6 @@ const ScaleStruck = () => {
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="info-Document">
-                                <div className="w-100">
-                                    <div className="d-flex align-items-center">
-                                        <div className="w-25">
-                                            <label style={{ color: 'blue', fontWeight: 'bold' }}>Chứng Từ</label>
-                                        </div>
-                                        <div className="w-75">
-                                            <input type="text" style={{ width: '85%' }} className="form-control" id="documents" name="documents" value={getDataInput.documents} onChange={(e) => handleOnChange(e)} placeholder="Nhập chứng từ" required />
                                         </div>
                                     </div>
                                 </div>
@@ -548,8 +592,11 @@ const ScaleStruck = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {struckScale.map((item) => (
-                                    <tr key={item.id} onClick={() => setValueItem(item)}>
+                                {struckScale.map((item, i) => (
+                                    <tr key={item.id} onClick={() => {
+                                        setValueItem(item);
+                                        colorChangeBox(i)
+                                    }} className={changeColor === i ? "selected" : ""} >
                                         <td>{item.ordinalNumber}</td>
                                         <td>{item.carNumber}</td>
                                         <td>{item.documents}</td>

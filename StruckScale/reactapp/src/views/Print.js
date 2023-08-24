@@ -15,6 +15,9 @@ class Print extends React.Component {
     render() {
         return (
             <>
+                {console.log(this.props.styleScale == "Nhập hàng")}
+                {console.log(this.props.styleScale == "Xuất hàng")}
+
                 <ReactToPrint
                     trigger={() => {
                         return <button type="button" className="btn btn-light">
@@ -49,19 +52,21 @@ class Print extends React.Component {
                                 </tr>
                                 <tr>
                                     <td>- Trọng lượng xe & hàng</td>
-                                    <td style={{ fontWeight: 'bold' }}>: {this.props.results ? (this.props.results).toLocaleString('en-US') : ''} Kg</td>
+                                    <td style={{ fontWeight: 'bold' }}>: {Math.max(this.props.firstScale, this.props.secondScale) ? (Math.max(this.props.firstScale, this.props.secondScale)).toLocaleString('en-US') : ''} Kg</td>
                                     <td>- Ngày giờ: </td>
-                                    <td>: {this.props.firstScaleDate ? new Date(this.props.firstScaleDate).toLocaleString() : ''}</td>
+                                    <td>: {this.props.styleScale == "Nhập hàng" ? (new Date(this.props.firstScaleDate).toLocaleString()) : (new Date(this.props.secondScaleDate).toLocaleString())}</td>
+                                    {/*<td>: {this.props.firstScaleDate ? new Date(this.props.firstScaleDate).toLocaleString() : ''}</td>*/}
                                 </tr>
                                 <tr>
                                     <td>- Trọng lượng xe</td>
-                                    <td style={{ fontWeight: 'bold' }}>: {this.props.firstScale ? (this.props.firstScale).toLocaleString('en-US') : ''} Kg</td>
+                                    <td style={{ fontWeight: 'bold' }}>: {Math.min(this.props.firstScale, this.props.secondScale) ? (Math.min(this.props.firstScale, this.props.secondScale)).toLocaleString('en-US') : ''} Kg</td>
                                     <td>- Ngày giờ:</td>
-                                    <td>: {this.props.secondScaleDate ? new Date(this.props.secondScaleDate).toLocaleString() : ''}</td>
+                                    <td>: {this.props.styleScale == "Nhập hàng" ? (new Date(this.props.secondScaleDate).toLocaleString()) : (new Date(this.props.firstScaleDate).toLocaleString())}</td>
+                                    {/*<td>: {this.props.secondScaleDate ? new Date(this.props.secondScaleDate).toLocaleString() : ''}</td>*/}
                                 </tr>
                                 <tr>
                                     <td>- Trọng lượng hàng</td>
-                                    <td style={{ fontWeight: 'bold' }}>: {this.props.secondScale ? (this.props.secondScale).toLocaleString('en-US') : ''} Kg</td>
+                                    <td style={{ fontWeight: 'bold' }}>: {this.props.results ? (this.props.results).toLocaleString('en-US') : ''} Kg</td>
                                 </tr>
                                 <tr>
                                     <td>- Số chứng từ</td>

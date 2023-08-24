@@ -23,7 +23,7 @@ const Report = () => {
         getList();
     }, []);
     const getList = async () => {
-        const res = await axios('https://localhost:7007/api/Home/getAll').then(x => { setStruckScale(x.data) })
+        const res = await axios('https://100.100.100.123:7007/api/Home/getAll').then(x => { setStruckScale(x.data) })
     };
     const pageCount = Math.ceil(
         struckScale.filter((item) => {
@@ -35,7 +35,7 @@ const Report = () => {
             setStartDate(newStartDate);
             setEndDate(newEndDate);
             let rangeDate = newStartDate.toLocaleDateString("es-CL") + " - " + newEndDate.toLocaleDateString("es-CL");
-            const res = await axios.get('https://localhost:7007/api/Home/GetDataByDate/' + rangeDate)
+            const res = await axios.get('https://100.100.100.122:7007/api/Home/GetDataByDate/' + rangeDate)
                 .then(x => setdataExcel(x.data))
         } catch (e) {
             console.log(e)
@@ -57,7 +57,7 @@ const Report = () => {
                         <input type="text" className="form-control" placeholder="Search" onChange={(e) => setSearchInput(e.target.value)} onInput={(e) => { setSearchInput(e.target.value), handlePageClick({ selected: 0 }) }} aria-label="Search"
                             aria-describedby="button-addon2" />
                         <button className="btn btn-outline-secondary" type="button" id="button-addon2">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
+                            <svg xmlns="https://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
                                 <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z" />
                             </svg>
                             <i className="fa fa-search" aria-hidden="true"></i>
