@@ -9,15 +9,15 @@ namespace webapi.Controllers
     [ApiController]
     public class CustomerController : Controller
     {
-        private readonly scaleInfo dbContext;
-        public CustomerController(scaleInfo dbContext)
+        private readonly ScaleInfo dbContext;
+        public CustomerController(ScaleInfo dbContext)
         {
             this.dbContext = dbContext;
         }
         [HttpGet("get")]
         public async Task<IActionResult> GetCustomer()
         {
-            var list = await dbContext.customer.ToListAsync();
+            var list = await dbContext.Customer.ToListAsync();
             return Ok(list);
         }
         [HttpPost("add-customer")]
@@ -26,9 +26,9 @@ namespace webapi.Controllers
             var resultsCustomer = new Customer()
             {
                 shortcutName = customers.shortcutName,
-                Name = customers.Name,
+                name = customers.name,
             };
-            await dbContext.customer.AddAsync(resultsCustomer);
+            await dbContext.Customer.AddAsync(resultsCustomer);
             await dbContext.SaveChangesAsync();
             return Ok(resultsCustomer);
         }
@@ -37,11 +37,11 @@ namespace webapi.Controllers
         {
             try
             {
-                var check = await dbContext.customer.FindAsync(id);
+                var check = await dbContext.Customer.FindAsync(id);
                 if (check != null)
                 {
                     check.shortcutName = customer.shortcutName;
-                    check.Name = customer.Name;
+                    check.name = customer.name;
                     await dbContext.SaveChangesAsync();
                     return Ok(check);
                 }
@@ -61,11 +61,11 @@ namespace webapi.Controllers
         {
             try
             {
-                var check = dbContext.customer.Where(x => x.id == id).FirstOrDefault();
+                var check = dbContext.Customer.Where(x => x.id == id).FirstOrDefault();
                 if (check != null)
                 {
-                    Customer customers = await dbContext.customer.FindAsync(id);
-                    dbContext?.customer.Remove(customers);
+                    Customer customers = await dbContext.Customer.FindAsync(id);
+                    dbContext?.Customer.Remove(customers);
                     dbContext?.SaveChanges();
                 }
                 else

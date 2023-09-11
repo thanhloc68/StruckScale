@@ -4,14 +4,26 @@ import { useEffect, useState } from "react"
 import ReactPaginate from 'react-paginate';
 import { ExportToExcel } from '../components/ExportToExcel';
 import '../assets/style.css'
-import { format } from 'date-fns';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
 
 const Report = () => {
     const [struckScale, setStruckScale] = useState([])
-    const [dataExcel, setdataExcel] = useState([])
+    const [dataExcel, setdataExcel] = useState([{
+        carNumber: "",
+        documents: "",
+        product: "",
+        customer: "",
+        firstScale: 0,
+        secondScale: 0,
+        results: 0,
+        firstScaleDate: "",
+        secondScaleDate: "",
+        createDate:"",
+        styleScale: "",
+        notes: "",
+    }])
     const [searchInput, setSearchInput] = useState('');
     const [startDate, setStartDate] = useState(new Date());
     const [endDate, setEndDate] = useState(new Date());
@@ -23,7 +35,7 @@ const Report = () => {
         getList();
     }, []);
     const getList = async () => {
-        const res = await axios('https://100.100.100.123:7007/api/Home/getAll').then(x => { setStruckScale(x.data) })
+        const res = await axios('https://localhost:7007/api/Home/getAll').then(x => { setStruckScale(x.data) })
     };
     const pageCount = Math.ceil(
         struckScale.filter((item) => {
@@ -35,7 +47,7 @@ const Report = () => {
             setStartDate(newStartDate);
             setEndDate(newEndDate);
             let rangeDate = newStartDate.toLocaleDateString("es-CL") + " - " + newEndDate.toLocaleDateString("es-CL");
-            const res = await axios.get('https://100.100.100.122:7007/api/Home/GetDataByDate/' + rangeDate)
+            const res = await axios.get('https://localhost:7007/api/Home/GetDataByDate/' + rangeDate)
                 .then(x => setdataExcel(x.data))
         } catch (e) {
             console.log(e)
@@ -48,6 +60,7 @@ const Report = () => {
 
     return (
         <>
+            {console.log(dataExcel)}
             <div className="text">
                 <h2>Thông Tin Cân Xe</h2>
             </div>

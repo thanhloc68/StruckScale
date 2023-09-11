@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using System.Net;
 using webapi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +15,7 @@ builder.Services.AddSwaggerGen();
 //    options.Preload = true;
 //    options.IncludeSubDomains = true;
 //    options.MaxAge = TimeSpan.FromDays(60);
-//    options.ExcludedHosts.Add("https://100.100.100.123:7007");
+//    options.ExcludedHosts.Add("https://100.100.100.155:7007");
 //});
 
 //builder.Services.AddHttpsRedirection(options =>
@@ -25,7 +24,7 @@ builder.Services.AddSwaggerGen();
 //    options.HttpsPort = 5001;
 //});
 
-builder.Services.AddDbContext<scaleInfo>(options =>
+builder.Services.AddDbContext<ScaleInfo>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("InfoStringConnection")));
 
 builder.Services.AddCors(p => p.AddPolicy("corsapp", builder =>

@@ -10,8 +10,8 @@ namespace webapi.Controllers
     [ApiController]
     public class ProductController : Controller
     {
-        private readonly scaleInfo dbContext;
-        public ProductController (scaleInfo dbContext)
+        private readonly ScaleInfo dbContext;
+        public ProductController (ScaleInfo dbContext)
         {
             this.dbContext = dbContext;
         }
@@ -19,7 +19,7 @@ namespace webapi.Controllers
         [HttpGet("get")]
         public async Task<IActionResult> GetProduct()
         {
-            var list = await dbContext.product.ToListAsync();
+            var list = await dbContext.Product.ToListAsync();
             return Ok(list);
         }
         [HttpPost("add-product")]
@@ -28,9 +28,9 @@ namespace webapi.Controllers
             var resultsProduct = new Product()
             {
                 shortcutName = products.shortcutName,
-                Name = products.Name,
+                name = products.name,
             };
-            await dbContext.product.AddAsync(resultsProduct);
+            await dbContext.Product.AddAsync(resultsProduct);
             await dbContext.SaveChangesAsync();
             return Ok(resultsProduct);
         }
@@ -39,11 +39,11 @@ namespace webapi.Controllers
         {
             try
             {
-                var check = await dbContext.product.FindAsync(id);
+                var check = await dbContext.Product.FindAsync(id);
                 if (check != null)
                 {
                     check.shortcutName = products.shortcutName;
-                    check.Name = products.Name;
+                    check.name = products.name;
                     await dbContext.SaveChangesAsync();
                     return Ok(check);
                 }
@@ -63,11 +63,11 @@ namespace webapi.Controllers
         {
             try
             {
-                var check = dbContext.product.Where(x => x.id == id).FirstOrDefault();
+                var check = dbContext.Product.Where(x => x.id == id).FirstOrDefault();
                 if (check != null)
                 {
-                    Product product = await dbContext.product.FindAsync(id);
-                    dbContext?.product.Remove(product);
+                    Product product = await dbContext.Product.FindAsync(id);
+                    dbContext?.Product.Remove(product);
                     dbContext?.SaveChanges();
                 }
                 else

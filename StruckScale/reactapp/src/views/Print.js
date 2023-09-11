@@ -15,9 +15,6 @@ class Print extends React.Component {
     render() {
         return (
             <>
-                {console.log(this.props.styleScale == "Nhập hàng")}
-                {console.log(this.props.styleScale == "Xuất hàng")}
-
                 <ReactToPrint
                     trigger={() => {
                         return <button type="button" className="btn btn-light">

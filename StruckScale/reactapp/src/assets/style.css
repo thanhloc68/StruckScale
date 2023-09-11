@@ -130,7 +130,7 @@ li.nav-item:hover {
     max-height: 400px
 }
 
-    .table-responsive td, .table-responsive th {
+.table-responsive td, .table-responsive th {
         white-space: nowrap; /* Prevents text from wrapping */
         overflow: hidden;
         text-overflow: ellipsis; /* Truncates text with an ellipsis (...) */
@@ -164,7 +164,7 @@ li.nav-item:hover {
     background-color: #fff;
 }
 
-    .popup-inner .close-btn {
+.popup-inner .close-btn {
         position: absolute;
         top: 16px;
         right: 16px;
