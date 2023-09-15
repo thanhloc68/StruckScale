@@ -11,6 +11,8 @@ import axios from 'axios';
 const Report = () => {
     const [struckScale, setStruckScale] = useState([])
     const [dataExcel, setdataExcel] = useState([{
+        StruckID: "",
+        ordinalNumber: "",
         carNumber: "",
         documents: "",
         product: "",
@@ -60,7 +62,6 @@ const Report = () => {
 
     return (
         <>
-            {console.log(dataExcel)}
             <div className="text">
                 <h2>Thông Tin Cân Xe</h2>
             </div>
@@ -92,10 +93,10 @@ const Report = () => {
                     <ExportToExcel apiData={dataExcel} fileName={fileName} />
                 </div>
             </div>
-            <div className="row">
+            <div className="row pt-3">
                 <div className="col-sm-12">
-                    <div className="table-responsive-scale" style={{ maxHeight: '600px !important' }}>
-                        <table className="table table-striped table-bordered table-hover">
+                    <div className="table-responsive-scale">
+                        <table id="scale-table" className="table table-striped table-bordered table-hover">
                             <thead className="thead-light">
                                 <tr>
                                     <th>STT</th>
@@ -127,8 +128,8 @@ const Report = () => {
                                             <td>{item.firstScale ? item.firstScale.toLocaleString('en-US') : ''}</td>
                                             <td>{item.secondScale ? item.secondScale.toLocaleString('en-US') : ''}</td>
                                             <td>{item.results ? item.results.toLocaleString('en-US') : ''}</td>
-                                            <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString()) : ''}</td>
-                                            <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString()) : ''}</td>
+                                            <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString("en-IN")) : ''}</td>
+                                            <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString("en-IN")) : ''}</td>
                                             <td>{item.styleScale}</td>
                                             <td>{item.notes}</td>
                                         </tr>

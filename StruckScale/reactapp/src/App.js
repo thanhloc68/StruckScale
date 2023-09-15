@@ -7,6 +7,7 @@ import Home from './views/Home';
 import Report from './views/Report';
 import NavBar from './views/NavBar';
 import ScaleStruck from './views/ScaleStruck';
+import TankPump from './views/TankPump';
 
 const App = () => {
     return (
@@ -30,6 +31,7 @@ const App = () => {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/scalestruck" element={<ScaleStruck />} />
+                        <Route path="/tankpump" element={<TankPump />} />
                         <Route path="/report" element={<Report />} />
                     </Routes>
                 </div>

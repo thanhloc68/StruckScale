@@ -36,6 +36,7 @@ const ScaleStruck = () => {
         results: 0,
         styleScale: "",
         isDel: "",
+        isDone: false
     }]);
     //Nhập số cân bằng checkbox
     const [isCheckbox, setCheckbox] = useState(false);
@@ -82,7 +83,7 @@ const ScaleStruck = () => {
         try {
             if (isFirstScale == true) {
                 //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
-                await axios.get('https://100.100.100.119:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
+                await axios.get('https://localhost:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
                         "Access-Control-Allow-Origin": "*",
@@ -93,10 +94,10 @@ const ScaleStruck = () => {
             }
             if (isFirstScale == false && isSecondScale == true) {
                 //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
-                await axios.get('https://100.100.100.119:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
+                await axios.get('https://localhost:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
-                        "Access-Control-Allow-Origin": "100.100.100.119:39320",
+                        "Access-Control-Allow-Origin": "localhost:39320",
                     },
                 })
                     .then(res => setDataInput((prev) => ({ ...prev, secondScale: res.data.readResults[0].v })))
@@ -108,8 +109,8 @@ const ScaleStruck = () => {
     }
     //Lấy danh sách cân
     const getList = async () => {
-        //await axios.get('https://100.100.100.119:7007/api/Home/get?pg=1&pageSize=' + limit)
-        await axios.get('https://100.100.100.119:7007/api/Home/get?pg=1&pageSize=' + limit, {
+        //await axios.get('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit)
+        await axios.get('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Access-Control-Allow-Origin": "*",
@@ -122,7 +123,7 @@ const ScaleStruck = () => {
         }).catch(err => { return toast.error(err) });
     };
     const fetchData = async (currentPageClick) => {
-        const response = await axios.get('https://100.100.100.119:7007/api/Home/get?pg=' + currentPageClick + '&pageSize=' + limit, {
+        const response = await axios.get('https://localhost:7007/api/Home/get?pg=' + currentPageClick + '&pageSize=' + limit, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Access-Control-Allow-Origin": "*",
@@ -161,7 +162,8 @@ const ScaleStruck = () => {
             secondScaleDate: data.secondScaleDate,
             results: data?.results,
             isDel: data?.isDel,
-            styleScale: data?.styleScale
+            styleScale: data?.styleScale,
+            isDone: data?.isDone
         });
         if (isFirstScale == false && isSecondScale == false || isSecondScale == true && data.firstScale <= 0 && data.secondScale <= 0) {
             setIsFirstScale(true);
@@ -225,14 +227,17 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://100.100.100.119:7007/api/Home/post', input, headers)
+        await axios.post('https://localhost:7007/api/Home/post', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getList(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
     //Xóa thông tin khách hàng
     const onDeleteScale = async (id) => {
         try {
-            const response = await axios.delete('https://100.100.100.119:7007/api/Home?id=' + id)
+            if (id == null) {
+                getList();
+            }
+            const response = await axios.delete('https://localhost:7007/api/Home?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), fetchData(currentPageClick), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setStruckScale(struckScale.filter(struckScale => struckScale.id !== id || struckScale.isDel == false));
@@ -259,7 +264,7 @@ const ScaleStruck = () => {
     }
     //Cập nhật số cân lần 1, lần 2
     const updateScale = async () => {
-        const response = axios.put('https://100.100.100.119:7007/api/Home/' + getDataInput.id, getDataInput)
+        const response = await axios.put('https://localhost:7007/api/Home/' + getDataInput.id, getDataInput)
             .then(res => {
                 toast.success("Cập nhật cân thành công");
                 fetchData(currentPageClick);
@@ -276,13 +281,13 @@ const ScaleStruck = () => {
     }
     //Lấy danh sách khách hàng
     const getListCustomer = async () => {
-        const customer = await axios.get('https://100.100.100.119:7007/api/Customer/get')
+        const customer = await axios.get('https://localhost:7007/api/Customer/get')
             .then(res => setSelectCustomer(res.data))
             .catch(err => { return toast.error(err) })
     }
     //Lấy danh sách sản phẩm
     const getListProduct = async () => {
-        const product = await axios.get('https://100.100.100.119:7007/api/Product/get')
+        const product = await axios.get('https://localhost:7007/api/Product/get')
             .then(res => setSelectProduct(res.data))
             .catch(err => { return toast.error(err) })
     }
@@ -303,13 +308,13 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://100.100.100.119:7007/api/Customer/add-customer', input, headers)
+        await axios.post('https://localhost:7007/api/Customer/add-customer', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getListCustomer(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
     const onDeleteCustomer = async (id) => {
         try {
-            const response = await axios.delete('https://100.100.100.119:7007/api/Customer/delete?id=' + id)
+            const response = await axios.delete('https://localhost:7007/api/Customer/delete?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), getListCustomer(), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setSelectCustomer(selectCustomer.filter(selectCustomer => selectCustomer.id !== id));
@@ -334,7 +339,7 @@ const ScaleStruck = () => {
         })
     }
     const updatePopup = async () => {
-        const response = axios.put('https://100.100.100.119:7007/api/Customer/' + getDataPopup.id, getDataPopup)
+        const response = axios.put('https://localhost:7007/api/Customer/' + getDataPopup.id, getDataPopup)
             .then(res => { toast.success("Cập nhật cân thành công"), getListCustomer(), handleRefreshPopup() })
             .catch(error => { toast.error(`Error: ${error.message}`) })
     }
@@ -348,13 +353,13 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://100.100.100.119:7007/api/Product/add-product', input, headers)
+        await axios.post('https://localhost:7007/api/Product/add-product', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getListProduct(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
     const onDeleteProduct = async (id) => {
         try {
-            const response = await axios.delete('https://100.100.100.119:7007/api/Product/delete?id=' + id)
+            const response = await axios.delete('https://localhost:7007/api/Product/delete?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), getListProduct(), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setSelectProduct(selectProduct.filter(selectProduct => selectProduct.id !== id));
@@ -363,15 +368,12 @@ const ScaleStruck = () => {
         }
     }
     const updatePopupProduct = async () => {
-        const response = axios.put('https://100.100.100.119:7007/api/Product/' + getDataPopup.id, getDataPopup)
+        const response = axios.put('https://localhost:7007/api/Product/' + getDataPopup.id, getDataPopup)
             .then(res => { toast.success("Cập nhật cân thành công"), getListProduct(), handleRefreshPopup() })
             .catch(error => { toast.error(`Error: ${error.message}`) })
     }
     return (
         <>
-            {console.log(isFirstScale)}
-            {console.log(isSecondScale)}
-
             <form method="post" onSubmit={handleSubmit}>
                 <div className="check-scale">
                     <div className="form-check">
@@ -551,6 +553,7 @@ const ScaleStruck = () => {
                                 documents={getDataInput.documents}
                                 notes={getDataInput.notes}
                                 styleScale={getDataInput.styleScale}
+                                isDone={getDataInput.isDone}
                             />
                             <button type="button" className="btn btn-light">
                                 <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000", fontSize: "30px" }} onClick={() => onDeleteScale(getDataInput.id)} />
@@ -608,8 +611,8 @@ const ScaleStruck = () => {
                                         <td>{item.firstScale.toLocaleString('en-US')} Kg</td>
                                         <td>{item.secondScale.toLocaleString('en-US')} Kg</td>
                                         <td>{item.results != null ? item.results.toLocaleString('en-US') : 0} Kg</td>
-                                        <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString()) : ''}</td>
-                                        <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString()) : ''}</td>
+                                        <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString("en-IN")) : ''}</td>
+                                        <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString("en-IN")) : ''}</td>
                                         <td>{item.styleScale}</td>
                                         <td style={{ wordBreak: 'break-all' }}>{item.notes}</td>
                                     </tr>

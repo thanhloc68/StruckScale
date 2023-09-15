@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using System.Collections;
 using System.Globalization;
 using System.Linq;
-using System.Net.WebSockets;
 using webapi.Data;
 using webapi.Models;
 using webapi.Wrapper;
@@ -42,7 +40,6 @@ namespace webapi.Controllers
                        customer = struckInfos.struckInfos.customer,
                        documents = struckInfos.struckInfos.documents,
                        notes = struckInfos.struckInfos.notes,
-                       isDel = struckInfos.struckInfos.isDel,
                        firstScale = struckScales != null ? struckScales.firstScale : 0,
                        firstScaleDate = struckScales != null ? struckScales.firstScaleDate : null,
                        secondScale = struckScales != null ? struckScales.secondScale : 0,
@@ -64,7 +61,6 @@ namespace webapi.Controllers
         {
             DateTime dateTime = DateTime.Now;
             var DayNow = dateTime.AddDays(-1).ToShortDateString();
-            //var list = await dbContext.struckInfo.Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.secondScale == 0).OrderByDescending(x => x.id).ToListAsync();
             var list = await dbContext.StruckInfo.GroupJoin(
               dbContext.StruckScale,
               struckInfos => struckInfos.id,
@@ -80,7 +76,6 @@ namespace webapi.Controllers
                   customer = struckInfos.struckInfos.customer,
                   documents = struckInfos.struckInfos.documents,
                   notes = struckInfos.struckInfos.notes,
-                  isDel = struckInfos.struckInfos.isDel,
                   firstScale = struckScales != null ? struckScales.firstScale : 0,
                   firstScaleDate = struckScales != null ? struckScales.firstScaleDate : null,
                   secondScale = struckScales != null ? struckScales.secondScale : 0,
@@ -108,8 +103,7 @@ namespace webapi.Controllers
             if (start != null)
             {
                 DateTime startDateValue = DateTime.ParseExact(start, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                DateTime endDateValue = DateTime.ParseExact(end, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                //var getDate = await dbContext.StruckScale.Where(x => x.firstScaleDate >= startDateValue && x.secondScaleDate <= endDateValue).ToListAsync();
+                DateTime endDateValue = DateTime.ParseExact(end, "dd-MM-yyyy", CultureInfo.InvariantCulture).AddDays(1).AddSeconds(-1);
                 var getDate = await dbContext.StruckInfo.GroupJoin(
                    dbContext.StruckScale,
                    struckInfos => struckInfos.id,
@@ -120,6 +114,8 @@ namespace webapi.Controllers
                    x => x.struckScalesGroup.DefaultIfEmpty(),
                    (struckInfos, struckScales) => new StruckScaleInfomation()
                    {
+                       struckId = struckInfos.struckInfos.id,
+                       ordinalNumber = struckInfos.struckInfos.ordinalNumber,
                        carNumber = struckInfos.struckInfos.carNumber,
                        documents = struckInfos.struckInfos.documents,
                        product = struckInfos.struckInfos.product,
@@ -135,7 +131,7 @@ namespace webapi.Controllers
                    }).Where(x => x.firstScaleDate >= startDateValue && (DateTime?)x.secondScaleDate <= endDateValue).ToListAsync();
                 return Ok(getDate);
             }
-            return null;
+            return Ok();
         }
         [HttpGet("search/{search}")]
         public IActionResult Search(string search)
@@ -192,6 +188,18 @@ namespace webapi.Controllers
             };
             await dbContext.StruckScale.AddAsync(resultScale);
             await dbContext.SaveChangesAsync();
+            var resultTankPump = new TankStrucks()
+            {
+                struckID = resultInfo.id,
+                sourceOfGoods = "",
+                requestedVolume = 0,
+                pumpVolume = 0,
+                startTimePump = null,
+                endTimePump = null,
+                createDate = dateTime
+            };
+            await dbContext.TankStruck.AddAsync(resultTankPump);
+            await dbContext.SaveChangesAsync();
             return Ok(resultInfo);
         }
         [HttpGet("detail/{id}")]
@@ -240,11 +248,17 @@ namespace webapi.Controllers
         {
             try
             {
-                var checkinfo = dbContext.StruckInfo.Where(p => p.id == id).FirstOrDefault();
+                if (id == null)
+                {
+                    throw new Exception("Chưa chọn xe");
+                }
+                var checkinfo = await dbContext.StruckInfo.Where(p => p.id == id).FirstOrDefaultAsync(); //xóa cái này cuối cùng
                 var checkScale = await dbContext.StruckScale.Where(p => p.struckID != null && p.struckID == id).FirstOrDefaultAsync();
-                if (checkinfo?.isDel == true && checkScale != null)
+                var tankPump = await dbContext.TankStruck.Where(p => p.struckID != null && p.struckID == id).FirstOrDefaultAsync();
+                if (checkinfo?.isDel == true && checkScale != null && tankPump != null)
                 {
                     dbContext.Remove(checkScale);
+                    dbContext.Remove(tankPump);
                     dbContext.SaveChanges();
                     dbContext.Remove(checkinfo);
                     dbContext.SaveChanges();

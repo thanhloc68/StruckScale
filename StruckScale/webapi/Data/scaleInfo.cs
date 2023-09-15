@@ -9,7 +9,7 @@ namespace webapi.Data
 
         public DbSet<StruckInfo> StruckInfo { get; set; }
         public DbSet<StruckScales> StruckScale { get; set; }
-        public DbSet<TankStruck> TankStrucks { get; set; }
+        public DbSet<TankStrucks> TankStruck { get; set; }
         public DbSet<Customer> Customer { get; set; }
         public DbSet<Product> Product { get; set; }
     }

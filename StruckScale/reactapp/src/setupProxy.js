@@ -6,7 +6,7 @@ const context = [
 ];
 module.exports = function (app) {
     const appProxy = createProxyMiddleware(context, {
-        target: 'https://100.100.100.142:7007',
+        target: 'https://100.100.100.115:7007',
         secure: false,
         changeOrigin: true,
         headers: {

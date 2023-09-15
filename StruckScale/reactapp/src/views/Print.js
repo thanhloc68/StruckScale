@@ -1,17 +1,15 @@
-﻿/* eslint-disable no-unused-vars */
-/* eslint-disable react/prop-types */
+﻿/* eslint-disable react/prop-types */
+
 import React from 'react'
 import ReactToPrint from 'react-to-print';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPrint } from "@fortawesome/free-solid-svg-icons";
 class Print extends React.Component {
-
     newDate = new Date().toLocaleDateString();
     getDate = this.newDate.split('/');
     getDays = this.getDate[1];
     getMonths = this.getDate[0];
     getYears = this.getDate[2];
-
     render() {
         return (
             <>

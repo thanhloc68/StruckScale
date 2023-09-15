@@ -11,6 +11,9 @@ class NavBar extends React.Component {
                     <a className="nav-link active" href="/scalestruck">Cân xe</a>
                 </li>
                 <li className="nav-item">
+                    <a className="nav-link active" href="/tankpump">Bơm xe Bồn</a>
+                </li>
+                <li className="nav-item">
                     <a className="nav-link" href="/report">Report</a>
                 </li>
             </ul>
