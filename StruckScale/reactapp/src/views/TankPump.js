@@ -5,11 +5,12 @@ import ReactPaginate from "react-paginate";
 import Print from "./Print";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import MoTorOn from "../assets/img/On.jpg";
-import MoTorOff from "../assets/img/Off.jpg";
+import MoTorOn from "../assets/img/On.png";
+import MoTorOff from "../assets/img/Off.png";
 
 const TankPump = () => {
     let limit = 12;
+    const url = 'https://100.100.100.156';
     const [tankPump, setTankPump] = useState([]);
     const [pumpValue, setpumpValue] = useState(0);
     const [pageNumber, setPageNumber] = useState(0);
@@ -24,11 +25,14 @@ const TankPump = () => {
         requestedVolume: "",
         pumpVolume: "",
         startTimePump: "",
-        endTimePump: ""
+        endTimePump: "",
+        processing: 0
     }]);
     const [changeColor, setChangeColor] = useState(-1);
     const [isCheckbox, setCheckbox] = useState(false);
+    const [isCheckValue, setCheckValue] = useState(null);
     const [isMotor, setIsMotor] = useState(false);
+    const [animation, setAnimation] = useState(0);
     const pagesVisited = pageNumber * limit;
 
     const colorChangeBox = async (selected) => {
@@ -39,32 +43,30 @@ const TankPump = () => {
     useEffect(() => {
         getList();
         let interval = null;
-        interval = setInterval(() => {
-            isMotorOn();
-        }, 1000);
+        let intervalTimeOut = null;
         if (getDataInput.pumpVolume <= getDataInput.requestedVolume) {
+            isMotorOn();
             if (isMotor == true) {
                 interval = setInterval(async () => {
-                    isMotorOn();
-                    tankpumpvalue();
-                    updateTankPump();
-                }, 1000);
+                    await updateTankPump();
+                    setAnimation((getDataInput.pumpVolume / getDataInput.requestedVolume) * 100);
+                }, 1500);
+                if (getDataInput.processing == 2) { refreshData(); toast.success('Đã bơm xong'); }
             }
             else {
-                interval = setTimeout(async () => {
-                    tankpumpvalue();
-                    updateTankPump();
+                intervalTimeOut = setTimeout(async () => {
+                    await updateTankPump();
                 }, 2000)
             }
         }
         else {
             isMotorOn();
         }
-        return () => clearInterval(interval);
-    }, [isMotor, getDataInput])
+        return () => { clearInterval(interval); clearTimeout(intervalTimeOut); }
+    }, [getDataInput])
 
     const getList = async () => {
-        await axios('https://localhost:7007/api/TankPump/GetList').then(x => { setTankPump(x.data) });
+        await axios(url + ':7007/api/TankPump/GetList').then(x => { setTankPump(x.data) }).catch(error => console.log(error));
     }
     const pageCount = Math.ceil(tankPump.length / limit);
     const handlePageClick = async (data) => {
@@ -72,24 +74,36 @@ const TankPump = () => {
         setPageNumber(currentPage - 1);
     }
     const setValueItem = async (data) => {
-        setDataInput({
-            id: data?.struckID,
-            ordinalNumber: data?.ordinalNumber,
-            carNumber: data?.carNumber,
-            customer: data?.customer,
-            documents: data?.documents,
-            product: data?.product,
-            sourceOfGoods: data?.sourceOfGoods,
-            requestedVolume: data?.requestedVolume,
-            pumpVolume: data?.pumpVolume,
-            notes: data?.notes,
-            startTimePump: data.startTimePump,
-            endTimePump: data.endTimePump,
-            createDate: data?.createDate,
-        });
-        if (isMotor == false && getDataInput.requestedVolume > 0) {
-            isMotorOn();
+        if (isCheckValue === data?.struckID) {
+            if (isMotor == true && getDataInput.processing == 1 && getDataInput.pumpVolume < getDataInput.requestedVolume) {
+                if (confirm('Bạn có muốn thay đổi')) {
+                    refreshData();
+                }
+            }
+            else {
+                refreshData();
+            }
         }
+        else {
+            setCheckValue(data?.struckID);
+            setDataInput({
+                id: data?.struckID,
+                ordinalNumber: data?.ordinalNumber,
+                carNumber: data?.carNumber,
+                customer: data?.customer,
+                documents: data?.documents,
+                product: data?.product,
+                sourceOfGoods: data?.sourceOfGoods,
+                requestedVolume: data?.requestedVolume,
+                pumpVolume: data?.pumpVolume,
+                notes: data?.notes,
+                startTimePump: data.startTimePump,
+                endTimePump: data.endTimePump,
+                createDate: data?.createDate,
+                processing: data?.processing
+            });
+        }
+        isMotorOn();
     }
     const handleOnChange = (event) => {
         const { name, value } = event.currentTarget;
@@ -113,44 +127,67 @@ const TankPump = () => {
         }
     }
     const updateTankPump = async () => {
-        const response = await axios.put('https://localhost:7007/api/TankPump/' + getDataInput.id, getDataInput)
+        await tankpumpvalue();
+        const response = await axios.put(url + ':7007/api/TankPump/' + getDataInput.id, getDataInput)
             .then(res => {
                 getList();
             })
-            .catch(error => { return error })
+            .catch(error => { console.log(error) })
     }
     const isMotorOn = async () => {
-        const response = await axios('https://localhost:39320/iotgateway/read?ids=Channel1.Device1.DongCo', {
-            headers: {
-                "Content-Type": 'application/x-www-form-urlencoded',
-                "Access-Control-Allow-Origin": '*',
-                "Access-Control-Allow-Headers": 'Content-Type, X-Auth-Token, Origin, Authorization'
-            },
-        }).then(res => {
-            setIsMotor(res.data.readResults[0].v)
-        }).catch(err => { return toast.error(err) })
+        try {
+            const request = await axios(url + ':39320/iotgateway/read?ids=Channel1.Device1.DongCo').then(res => {
+                setIsMotor(res.data.readResults[0].v)
+            })
+        } catch (e) {
+            console.error('Error fetching motor status:', e);
+        }
     }
     const tankpumpvalue = async () => {
         if (isMotor == true && getDataInput.pumpVolume <= getDataInput.requestedVolume) {
-            const response = await axios('https://localhost:39320/iotgateway/read?ids=Channel1.Device1.khoiluongbomxe', {
+            const response = await axios(url + ':39320/iotgateway/read?ids=Channel1.Device1.khoiluongbomxe', {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Headers": 'Content-Type, X-Auth-Token, Origin, Authorization'
                 },
-            }).then(res => { setpumpValue(res.data.readResults[0].v); setDataInput((prev) => ({ ...prev, pumpVolume: res.data.readResults[0].v })) }
+            }).then(res => {
+                setpumpValue(res.data.readResults[0].v);
+                setDataInput((prev) => ({ ...prev, pumpVolume: res.data.readResults[0].v }))
+            }
             ).catch(error => { toast.error(error) })
         }
     }
+    const handleUpdateMotor = async () => {
+        await isMotorOn();
+        if (isMotor == false) {
+            refreshData();
+        }
+    }
+    const refreshData = () => {
+        setCheckValue(null);
+        setDataInput([]);
+        setAnimation(0);
+        setChangeColor(-1);
+        setpumpValue(0);
+    }
+
     return (
         <>
-            <div className="d-flex flex-column">
-                {isMotor ? <img src={MoTorOn} style={{ width: '150px', height: '100px' }} /> : <img src={MoTorOff} style={{ width: '150px', height: '100px' }} />}
-            </div>
-            <div className="d-flex flex-column">
-                <span>Giá trị bơm PLC {pumpValue}</span>
-                <span>Giá trị bơm đo được {getDataInput.pumpVolume}</span>
-                <span>{isMotor ? "Mở" : "Tắt"}</span>
+            <div className="container">
+                <div className="row">
+                    <div className="col-md-12">
+                        <div className="glass">
+                            <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
+                                <span style={{ zIndex: '1' }}>{getDataInput.id != null ? ((getDataInput.pumpVolume / getDataInput.requestedVolume) * 100).toFixed(2) : '0'} %</span>
+                            </div>
+                            <div className="water" style={{ height: animation + '%', maxHeight: '100%' }}></div>
+                        </div>
+                        <div className="d-flex flex-column">
+                            {isMotor ? <img src={MoTorOn} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} /> : <img src={MoTorOff} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} />}
+                        </div>
+                    </div>
+                </div>
             </div>
             <div className="row">
                 <div className="check-scale">
@@ -179,13 +216,6 @@ const TankPump = () => {
                             </div>
                             <div className="col-md-2 px-2">
                                 <div className="form-check">
-                                    <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Tài xế</span>
-                                    <input type="text" className="form-control" placeholder="#######" value="" onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', fontSize: '30px' }} />
-                                </div>
-                            </div>
-                            <div className="col-md-2 px-2">
-                                <div className="form-check">
                                     <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Khối lượng yêu cầu</span>
                                     <input type="text" className="form-control" id="requestedVolume" name="requestedVolume" placeholder="#######" value={getDataInput.requestedVolume} onChange={(e) => handleOnChange(e)}
                                         style={{ textAlign: 'center', fontSize: '30px' }} />
@@ -196,6 +226,15 @@ const TankPump = () => {
                                     <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Lưu</span>
                                     <div className="d-flex justify-content-center align-items-center pt-3">
                                         <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-md-2 px-2">
+                                <div className="form-check">
+                                    <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Cập nhật Motor</span>
+                                    <div className="d-flex justify-content-center align-items-center pt-3">
+                                        <button type="button" className="btn btn-light" onClick={handleUpdateMotor}> Cập nhật
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -223,12 +262,12 @@ const TankPump = () => {
                         <table id="scale-table" className="table table-striped table-bordered table-hover">
                             <thead className="thead-light">
                                 <tr>
+                                    <th></th>
                                     <th>STT</th>
                                     <th>Ngày</th>
                                     <th>Khách hàng</th>
                                     <th>Nguồn hàng</th>
                                     <th>Số xe</th>
-                                    <th>Tài xế</th>
                                     <th>Khối lượng yêu cầu (Kg)</th>
                                     <th>Khối lượng bơm (Kg)</th>
                                     <th>Giờ bắt đầu</th>
@@ -241,17 +280,31 @@ const TankPump = () => {
                                         <tr key={item.id} onClick={() => {
                                             setValueItem(item);
                                             colorChangeBox(i)
-                                        }} className={changeColor === i ? "selected" : ""} >
+                                        }}
+                                            className={`${changeColor === i ? 'selected' : ''} ${isCheckValue !== item.struckID && isCheckValue != null ? 'disabled-row' : ''}`}
+                                        >
+                                            <td className="text-center">
+                                                <input type="checkbox"
+                                                    id={`checkbox-${item.struckID}`}
+                                                    checked={isCheckValue === item.struckID}
+                                                />
+                                            </td>
                                             <td>{item.ordinalNumber}</td>
                                             <td>{item.startTimePump ? (new Date(item.createDate).toLocaleDateString("en-IN")) : ''}</td>
                                             <td>{item.customer}</td>
                                             <td>{item.sourceOfGoods}</td>
                                             <td>{item.carNumber}</td>
-                                            <td></td>
                                             <td>{item.requestedVolume}</td>
                                             <td>{item.pumpVolume}</td>
                                             <td>{item.startTimePump ? (new Date(item.startTimePump).toLocaleTimeString("en-US", { hour12: false })) : ''}</td>
                                             <td>{item.endTimePump ? (new Date(item.endTimePump).toLocaleTimeString("en-US", { hour12: false })) : ''}</td>
+                                            <td>{(() => {
+                                                switch (item.processing) {
+                                                    case 0: return "Chưa có thông số";
+                                                    case 1: return "Đang bơm";
+                                                    case 2: return "Hoàn thành";
+                                                }
+                                            })()}</td>
                                         </tr>
                                     ))}
                             </tbody>
@@ -277,7 +330,6 @@ const TankPump = () => {
                     </nav>
                 </div>
             </div>
-
         </>
     )
 }

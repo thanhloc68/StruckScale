@@ -48,7 +48,7 @@ namespace webapi.Controllers
                        styleScale = struckScales != null ? struckScales.styleScale : null,
                        createDate = struckScales != null ? struckScales.createDate : null,
                        isDone = struckScales != null ? struckScales.isDone : false
-                   }).OrderByDescending(x => x.struckId).ToListAsync();
+                   }).AsNoTracking().OrderByDescending(x => x.struckId).ToListAsync();
                 return Ok(list);
             }
             catch (Exception)
@@ -85,9 +85,7 @@ namespace webapi.Controllers
                   createDate = struckScales != null ? struckScales.createDate : null,
                   isDone = struckScales != null ? struckScales.isDone : false
               })
-              .Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.secondScale == 0)
-              .OrderByDescending(x => x.struckId)
-              .ToListAsync();
+              .Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.secondScale == 0).AsNoTracking().OrderByDescending(x => x.struckId).ToListAsync();
             var totalCount = list.Count;
             var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
             var listPerPage = list.Skip((pg - 1) * pageSize).Take(pageSize).ToList();
@@ -128,7 +126,7 @@ namespace webapi.Controllers
                        createDate = struckScales != null ? struckScales.createDate : null,
                        styleScale = struckScales != null ? struckScales.styleScale : null,
                        notes = struckInfos.struckInfos.notes
-                   }).Where(x => x.firstScaleDate >= startDateValue && (DateTime?)x.secondScaleDate <= endDateValue).ToListAsync();
+                   }).Where(x => x.firstScaleDate >= startDateValue && (DateTime?)x.secondScaleDate <= endDateValue).AsNoTracking().ToListAsync();
                 return Ok(getDate);
             }
             return Ok();
@@ -187,7 +185,7 @@ namespace webapi.Controllers
                 isDone = false
             };
             await dbContext.StruckScale.AddAsync(resultScale);
-            await dbContext.SaveChangesAsync();
+            //await dbContext.SaveChangesAsync();
             var resultTankPump = new TankStrucks()
             {
                 struckID = resultInfo.id,
@@ -196,6 +194,7 @@ namespace webapi.Controllers
                 pumpVolume = 0,
                 startTimePump = null,
                 endTimePump = null,
+                processing = 0,
                 createDate = dateTime
             };
             await dbContext.TankStruck.AddAsync(resultTankPump);

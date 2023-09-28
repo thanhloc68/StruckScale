@@ -19,7 +19,7 @@ namespace webapi.Controllers
         [HttpGet("get")]
         public async Task<IActionResult> GetProduct()
         {
-            var list = await dbContext.Product.ToListAsync();
+            var list = await dbContext.Product.AsNoTracking().ToListAsync();
             return Ok(list);
         }
         [HttpPost("add-product")]

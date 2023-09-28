@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
 
 const Report = () => {
+    const url = 'https://100.100.100.156';
     const [struckScale, setStruckScale] = useState([])
     const [dataExcel, setdataExcel] = useState([{
         StruckID: "",
@@ -22,7 +23,7 @@ const Report = () => {
         results: 0,
         firstScaleDate: "",
         secondScaleDate: "",
-        createDate:"",
+        createDate: "",
         styleScale: "",
         notes: "",
     }])
@@ -37,7 +38,7 @@ const Report = () => {
         getList();
     }, []);
     const getList = async () => {
-        const res = await axios('https://localhost:7007/api/Home/getAll').then(x => { setStruckScale(x.data) })
+        const res = await axios(url + ':7007/api/Home/getAll').then(x => { setStruckScale(x.data) })
     };
     const pageCount = Math.ceil(
         struckScale.filter((item) => {

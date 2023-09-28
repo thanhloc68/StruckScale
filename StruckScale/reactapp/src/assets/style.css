@@ -186,3 +186,29 @@ li.nav-item:hover {
     border: 4px solid #00FF00 !important;
     font-weight: bold;
 }
+
+.glass {
+    margin: 127px 340px;
+    height: 100px;
+    width: 320px;
+    position: absolute;
+    z-index: 2;
+    border-style: none solid solid solid;
+    border-width: 10px;
+    border-color: lightgray;
+    border-radius: 10px;
+}
+
+.water {
+    width: 100%;
+    background-color: skyblue;
+    display: block;
+    position: absolute;
+    bottom: 0;
+    background-position: 0 100%;
+    transition: background-position 3000ms, color 3000ms ease, border-color 3000ms ease;
+}
+.disabled-row {
+    pointer-events: none; /* Disable all click events on the row */
+    opacity: 0.5; /* Optionally reduce opacity to indicate it's disabled */
+}

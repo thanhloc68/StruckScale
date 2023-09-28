@@ -14,6 +14,7 @@ import Loading from "../components/Loading";
 import PopUpCenter from "../components/popupcustomer";
 
 const ScaleStruck = () => {
+    const url = 'https://100.100.100.156';
     let limit = 12;
     const [loading, setLoading] = useState(true)
     //Lấy dữ liệu từ danh sách cân
@@ -83,7 +84,7 @@ const ScaleStruck = () => {
         try {
             if (isFirstScale == true) {
                 //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
-                await axios.get('https://localhost:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
+                await axios.get(url + ':39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
                         "Access-Control-Allow-Origin": "*",
@@ -94,7 +95,7 @@ const ScaleStruck = () => {
             }
             if (isFirstScale == false && isSecondScale == true) {
                 //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
-                await axios.get('https://localhost:39320/iotgateway/read?ids=Channel1.Device1.tag1', {
+                await axios.get(url + ':39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
                         "Access-Control-Allow-Origin": "localhost:39320",
@@ -110,7 +111,7 @@ const ScaleStruck = () => {
     //Lấy danh sách cân
     const getList = async () => {
         //await axios.get('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit)
-        await axios.get('https://localhost:7007/api/Home/get?pg=1&pageSize=' + limit, {
+        await axios.get(url + ':7007/api/Home/get?pg=1&pageSize=' + limit, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Access-Control-Allow-Origin": "*",
@@ -123,7 +124,7 @@ const ScaleStruck = () => {
         }).catch(err => { return toast.error(err) });
     };
     const fetchData = async (currentPageClick) => {
-        const response = await axios.get('https://localhost:7007/api/Home/get?pg=' + currentPageClick + '&pageSize=' + limit, {
+        const response = await axios.get(url + ':7007/api/Home/get?pg=' + currentPageClick + '&pageSize=' + limit, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Access-Control-Allow-Origin": "*",
@@ -227,7 +228,7 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://localhost:7007/api/Home/post', input, headers)
+        await axios.post(url + ':7007/api/Home/post', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getList(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
@@ -237,7 +238,7 @@ const ScaleStruck = () => {
             if (id == null) {
                 getList();
             }
-            const response = await axios.delete('https://localhost:7007/api/Home?id=' + id)
+            const response = await axios.delete(url + ':7007/api/Home?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), fetchData(currentPageClick), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setStruckScale(struckScale.filter(struckScale => struckScale.id !== id || struckScale.isDel == false));
@@ -264,7 +265,7 @@ const ScaleStruck = () => {
     }
     //Cập nhật số cân lần 1, lần 2
     const updateScale = async () => {
-        const response = await axios.put('https://localhost:7007/api/Home/' + getDataInput.id, getDataInput)
+        const response = await axios.put(url + ':7007/api/Home/' + getDataInput.id, getDataInput)
             .then(res => {
                 toast.success("Cập nhật cân thành công");
                 fetchData(currentPageClick);
@@ -281,13 +282,13 @@ const ScaleStruck = () => {
     }
     //Lấy danh sách khách hàng
     const getListCustomer = async () => {
-        const customer = await axios.get('https://localhost:7007/api/Customer/get')
+        const customer = await axios.get(url + ':7007/api/Customer/get')
             .then(res => setSelectCustomer(res.data))
             .catch(err => { return toast.error(err) })
     }
     //Lấy danh sách sản phẩm
     const getListProduct = async () => {
-        const product = await axios.get('https://localhost:7007/api/Product/get')
+        const product = await axios.get(url + ':7007/api/Product/get')
             .then(res => setSelectProduct(res.data))
             .catch(err => { return toast.error(err) })
     }
@@ -308,13 +309,13 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://localhost:7007/api/Customer/add-customer', input, headers)
+        await axios.post(url + ':7007/api/Customer/add-customer', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getListCustomer(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
     const onDeleteCustomer = async (id) => {
         try {
-            const response = await axios.delete('https://localhost:7007/api/Customer/delete?id=' + id)
+            const response = await axios.delete(url + ':7007/api/Customer/delete?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), getListCustomer(), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setSelectCustomer(selectCustomer.filter(selectCustomer => selectCustomer.id !== id));
@@ -339,7 +340,7 @@ const ScaleStruck = () => {
         })
     }
     const updatePopup = async () => {
-        const response = axios.put('https://localhost:7007/api/Customer/' + getDataPopup.id, getDataPopup)
+        const response = axios.put(url + ':7007/api/Customer/' + getDataPopup.id, getDataPopup)
             .then(res => { toast.success("Cập nhật cân thành công"), getListCustomer(), handleRefreshPopup() })
             .catch(error => { toast.error(`Error: ${error.message}`) })
     }
@@ -353,13 +354,13 @@ const ScaleStruck = () => {
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post('https://localhost:7007/api/Product/add-product', input, headers)
+        await axios.post(url + ':7007/api/Product/add-product', input, headers)
             .then(res => { return toast.success("Thêm thành công"), getListProduct(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
     const onDeleteProduct = async (id) => {
         try {
-            const response = await axios.delete('https://localhost:7007/api/Product/delete?id=' + id)
+            const response = await axios.delete(url + ':7007/api/Product/delete?id=' + id)
                 .then(res => { return toast.success("Xóa thành công"), getListProduct(), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setSelectProduct(selectProduct.filter(selectProduct => selectProduct.id !== id));
@@ -368,147 +369,116 @@ const ScaleStruck = () => {
         }
     }
     const updatePopupProduct = async () => {
-        const response = axios.put('https://localhost:7007/api/Product/' + getDataPopup.id, getDataPopup)
+        const response = axios.put(url + ':7007/api/Product/' + getDataPopup.id, getDataPopup)
             .then(res => { toast.success("Cập nhật cân thành công"), getListProduct(), handleRefreshPopup() })
             .catch(error => { toast.error(`Error: ${error.message}`) })
     }
     return (
         <>
-            <form method="post" onSubmit={handleSubmit}>
-                <div className="check-scale">
-                    <div className="form-check">
-                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>STT</span>
-                        <input className="form-control" value={getDataInput.ordinalNumber} id="ordinalNumber" name="ordinalNumber" onChange={(e) => handleOnChange(e)}
-                            style={{ textAlign: 'center', width: '76% !important', fontSize: '50px' }} placeholder="ID" />
-                        <div className="d-flex justify-content-center align-items-center">
-                            <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} />
-                            <label className="form-check-label" htmlFor="isCheckScale" style={{ fontSize: 'initial', margin: '0!important', color: 'blue', fontWeight: 'bold', padding: '5px 0 0 10px' }}>
-                                Nhận số cân
-                            </label>
-                        </div>
+            <div className="check-scale">
+                <div className="form-check">
+                    <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>STT</span>
+                    <input className="form-control" value={getDataInput.ordinalNumber} id="ordinalNumber" name="ordinalNumber" onChange={(e) => handleOnChange(e)}
+                        style={{ textAlign: 'center', width: '76% !important', fontSize: '50px' }} placeholder="ID" />
+                    <div className="d-flex justify-content-center align-items-center">
+                        <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} />
+                        <label className="form-check-label" htmlFor="isCheckScale" style={{ fontSize: 'initial', margin: '0!important', color: 'blue', fontWeight: 'bold', padding: '5px 0 0 10px' }}>
+                            Nhận số cân
+                        </label>
                     </div>
-                    <div className="col-md-10">
-                        <div className="input-group">
-                            <div className="col-md-3 px-2">
-                                <div className="form-check">
-                                    <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</span>
-                                    <input type="text" className="form-control" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', fontSize: '50px' }} />
+                </div>
+                <div className="col-md-10">
+                    <div className="input-group">
+                        <div className="col-md-3 px-2">
+                            <div className="form-check">
+                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</span>
+                                <input type="text" className="form-control" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
+                                    style={{ textAlign: 'center', fontSize: '50px' }} />
+                            </div>
+                        </div>
+                        <div className="col-md-3 px-2">
+                            <div className="form-check">
+                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 1</span>
+                                <input type="text" className="form-control" id="firstScale" name="firstScale" placeholder="#######" value={getDataInput.firstScale ? (getDataInput.firstScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
+                                    style={{ textAlign: 'center', fontSize: '50px' }} />
+                                <div className="w-100 text-center">
+                                    <span>{getDataInput.firstScaleDate ? new Date(getDataInput.firstScaleDate).toLocaleString() : ''}</span>
                                 </div>
                             </div>
-                            <div className="col-md-3 px-2">
-                                <div className="form-check">
-                                    <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 1</span>
-                                    <input type="text" className="form-control" id="firstScale" name="firstScale" placeholder="#######" value={getDataInput.firstScale ? (getDataInput.firstScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', fontSize: '50px' }} />
-                                    <div className="w-100 text-center">
-                                        <span>{getDataInput.firstScaleDate ? new Date(getDataInput.firstScaleDate).toLocaleString() : ''}</span>
-                                    </div>
+                        </div>
+                        <div className="col-md-3 px-2">
+                            <div className="form-check">
+                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 2</span>
+                                <input type="text" className="form-control" id="secondScale" name="secondScale" placeholder="#######" value={getDataInput.secondScale ? (getDataInput.secondScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
+                                    style={{ textAlign: 'center', fontSize: '50px' }} />
+                                <div className="w-100 text-center">
+                                    <span>{getDataInput.secondScaleDate ? new Date(getDataInput.secondScaleDate).toLocaleString() : ''}</span>
                                 </div>
                             </div>
-                            <div className="col-md-3 px-2">
-                                <div className="form-check">
-                                    <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 2</span>
-                                    <input type="text" className="form-control" id="secondScale" name="secondScale" placeholder="#######" value={getDataInput.secondScale ? (getDataInput.secondScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', fontSize: '50px' }} />
-                                    <div className="w-100 text-center">
-                                        <span>{getDataInput.secondScaleDate ? new Date(getDataInput.secondScaleDate).toLocaleString() : ''}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="col-md-3 px-2">
-                                <div className="form-check">
-                                    <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng hàng</span>
-                                    <input type="text" className="form-control" placeholder="#######" value={Math.abs(getDataInput.firstScale - getDataInput.secondScale) ? (Math.abs(getDataInput.firstScale - getDataInput.secondScale)).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        style={{ textAlign: 'center', fontSize: '50px' }} disabled />
-                                    <div className="w-100 text-center">
-                                        <span>{getDataInput.styleScale}</span>
-                                    </div>
+                        </div>
+                        <div className="col-md-3 px-2">
+                            <div className="form-check">
+                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng hàng</span>
+                                <input type="text" className="form-control" placeholder="#######" value={Math.abs(getDataInput.firstScale - getDataInput.secondScale) ? (Math.abs(getDataInput.firstScale - getDataInput.secondScale)).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
+                                    style={{ textAlign: 'center', fontSize: '50px' }} disabled />
+                                <div className="w-100 text-center">
+                                    <span>{getDataInput.styleScale}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="group-item pt-3">
-                    <div className="row">
-                        <div className="col-md-6">
-                            <div className="info-Scale">
-                                <div className="w-100">
-                                    <div className="d-flex align-items-center">
-                                        <div className="w-25">
-                                            <label style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</label>
-                                        </div>
-                                        <div className="w-75">
-                                            <input type="text" style={{ width: '85%' }} className="form-control" id="carNumber" name="carNumber" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)} placeholder="Nhập số xe" required />
-                                        </div>
+            </div>
+            <div className="group-item pt-3">
+                <div className="row">
+                    <div className="col-md-6">
+                        <div className="info-Scale">
+                            <div className="w-100">
+                                <div className="d-flex align-items-center">
+                                    <div className="w-25">
+                                        <label style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</label>
+                                    </div>
+                                    <div className="w-75">
+                                        <input type="text" style={{ width: '85%' }} className="form-control" id="carNumber" name="carNumber" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)} placeholder="Nhập số xe" required />
                                     </div>
                                 </div>
                             </div>
-                            <div className="info-Document">
-                                <div className="w-100">
-                                    <div className="d-flex align-items-center">
-                                        <div className="w-25">
-                                            <label style={{ color: 'blue', fontWeight: 'bold' }}>Chứng Từ</label>
-                                        </div>
-                                        <div className="w-75">
-                                            <input type="text" style={{ width: '85%' }} className="form-control" id="documents" name="documents" value={getDataInput.documents} onChange={(e) => handleOnChange(e)} placeholder="Nhập chứng từ" required />
-                                        </div>
+                        </div>
+                        <div className="info-Document">
+                            <div className="w-100">
+                                <div className="d-flex align-items-center">
+                                    <div className="w-25">
+                                        <label style={{ color: 'blue', fontWeight: 'bold' }}>Chứng Từ</label>
+                                    </div>
+                                    <div className="w-75">
+                                        <input type="text" style={{ width: '85%' }} className="form-control" id="documents" name="documents" value={getDataInput.documents} onChange={(e) => handleOnChange(e)} placeholder="Nhập chứng từ" required />
                                     </div>
                                 </div>
                             </div>
-                            <div className="info-Product">
-                                <div className="input-group">
-                                    <div className="w-100">
-                                        <div className="d-flex align-items-center">
-                                            <div className="w-25">
-                                                <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Hàng Hóa</label>
-                                            </div>
-                                            <div className="w-75">
-                                                <div className="d-flex">
-                                                    <div className="w-25">
-                                                        <select className="form-select" value={getDataInput.product} onChange={(e) => setDataInput({ ...getDataInput, product: e.target.value })}>
-                                                            <option value="">...</option>
-                                                            {
-                                                                selectProduct.map((item, i) => <option onChange={(e) => handleOnChange(e)} key={item.id} value={item.name}>{item.shortcutName}</option>)
-                                                            }
+                        </div>
+                        <div className="info-Product">
+                            <div className="input-group">
+                                <div className="w-100">
+                                    <div className="d-flex align-items-center">
+                                        <div className="w-25">
+                                            <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Hàng Hóa</label>
+                                        </div>
+                                        <div className="w-75">
+                                            <div className="d-flex">
+                                                <div className="w-25">
+                                                    <select className="form-select" value={getDataInput.product} onChange={(e) => setDataInput({ ...getDataInput, product: e.target.value })}>
+                                                        <option value="">...</option>
+                                                        {
+                                                            selectProduct.map((item, i) => <option onChange={(e) => handleOnChange(e)} key={item.id} value={item.name}>{item.shortcutName}</option>)
+                                                        }
 
-                                                        </select>
-                                                    </div>
-                                                    <div className="w-75 d-flex z-0">
-                                                        <input type="text" className="form-control" id="product" name="product" value={getDataInput.product} onChange={(e) => handleOnChange(e)} placeholder="Nhập hàng hóa" required />
-                                                        <button type="button" className="btn btn-light">
-                                                            <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} onClick={() => setButtonPopupProduct(true)} />
-                                                        </button>
-                                                    </div>
+                                                    </select>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="info-Customer">
-                                <div className="input-group">
-                                    <div className="w-100">
-                                        <div className="d-flex align-items-center">
-                                            <div className="w-25">
-                                                <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Khách Hàng</label>
-                                            </div>
-                                            <div className="w-75">
-                                                <div className="d-flex">
-                                                    <div className="w-25">
-                                                        <select className="form-select" value={getDataInput.customer} onChange={(e) => setDataInput({ ...getDataInput, customer: e.target.value })}>
-                                                            <option value="">...</option>
-                                                            {
-                                                                selectCustomer.map((item, i) => <option onChange={(e) => handleOnChange(e)} key={item.id} value={item.name}>{item.shortcutName}</option>)
-                                                            }
-                                                        </select>
-                                                    </div>
-                                                    <div className="w-75 d-flex z-0">
-                                                        <input type="text" className="form-control" id="customer" name="customer" value={getDataInput.customer} onChange={(e) => handleOnChange(e)} placeholder="Nhập tên khách hàng" required />
-                                                        <button type="button" className="btn btn-light">
-                                                            <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} onClick={() => setButtonPopupCustomer(true)} />
-                                                        </button>
-                                                    </div>
+                                                <div className="w-75 d-flex z-0">
+                                                    <input type="text" className="form-control" id="product" name="product" value={getDataInput.product} onChange={(e) => handleOnChange(e)} placeholder="Nhập hàng hóa" required />
+                                                    <button type="button" className="btn btn-light">
+                                                        <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} onClick={() => setButtonPopupProduct(true)} />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -516,67 +486,96 @@ const ScaleStruck = () => {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-6">
-                            <div className="info-Notes">
+                        <div className="info-Customer">
+                            <div className="input-group">
                                 <div className="w-100">
                                     <div className="d-flex align-items-center">
                                         <div className="w-25">
-                                            <label style={{ color: 'blue', fontWeight: 'bold' }}>Ghi chú</label>
+                                            <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Khách Hàng</label>
                                         </div>
                                         <div className="w-75">
-                                            <textarea className="form-control" aria-label="With textarea" id="notes" name="notes" value={getDataInput.notes} onChange={(e) => handleOnChange(e)}
-                                                placeholder="Nhập ghi chú" required></textarea>
+                                            <div className="d-flex">
+                                                <div className="w-25">
+                                                    <select className="form-select" value={getDataInput.customer} onChange={(e) => setDataInput({ ...getDataInput, customer: e.target.value })}>
+                                                        <option value="">...</option>
+                                                        {
+                                                            selectCustomer.map((item, i) => <option onChange={(e) => handleOnChange(e)} key={item.id} value={item.name}>{item.shortcutName}</option>)
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div className="w-75 d-flex z-0">
+                                                    <input type="text" className="form-control" id="customer" name="customer" value={getDataInput.customer} onChange={(e) => handleOnChange(e)} placeholder="Nhập tên khách hàng" required />
+                                                    <button type="button" className="btn btn-light">
+                                                        <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} onClick={() => setButtonPopupCustomer(true)} />
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="d-flex align-items-center pt-2">
-                        <div className="buttons me-auto">
-                            <button type="button" className="btn btn-light" onClick={handleRefresh}>
-                                <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
-                            </button>
-                            <button type="submit" className="btn btn-light">
-                                <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} onClick={(e) => handleAdd(e)} />
-                            </button>
-                            <Print
-                                index={getDataInput.ordinalNumber}
-                                product={getDataInput.product}
-                                customer={getDataInput.customer}
-                                carNumber={getDataInput.carNumber}
-                                results={getDataInput.results}
-                                firstScale={getDataInput.firstScale}
-                                firstScaleDate={getDataInput.firstScaleDate}
-                                secondScale={getDataInput.secondScale}
-                                secondScaleDate={getDataInput.secondScaleDate}
-                                documents={getDataInput.documents}
-                                notes={getDataInput.notes}
-                                styleScale={getDataInput.styleScale}
-                                isDone={getDataInput.isDone}
-                            />
-                            <button type="button" className="btn btn-light">
-                                <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000", fontSize: "30px" }} onClick={() => onDeleteScale(getDataInput.id)} />
-                            </button>
-                            <ToastContainer
-                                position="top-right"
-                                autoClose={2000}
-                                hideProgressBar={false}
-                                newestOnTop={false}
-                                closeOnClick
-                                rtl={false}
-                                pauseOnFocusLoss
-                                draggable
-                                pauseOnHover
-                                theme="light"
-                            />
-                        </div>
-                        <div className="ms-auto">
-                            <Clock />
+                    <div className="col-md-6">
+                        <div className="info-Notes">
+                            <div className="w-100">
+                                <div className="d-flex align-items-center">
+                                    <div className="w-25">
+                                        <label style={{ color: 'blue', fontWeight: 'bold' }}>Ghi chú</label>
+                                    </div>
+                                    <div className="w-75">
+                                        <textarea className="form-control" aria-label="With textarea" id="notes" name="notes" value={getDataInput.notes} onChange={(e) => handleOnChange(e)}
+                                            placeholder="Nhập ghi chú" required></textarea>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </form>
+                <div className="d-flex align-items-center pt-2">
+                    <div className="buttons me-auto">
+                        <button type="button" className="btn btn-light" onClick={handleRefresh}>
+                            <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
+                        </button>
+                        <button type="submit" className="btn btn-light">
+                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} onClick={(e) => handleAdd(e)} />
+                        </button>
+                        <Print
+                            index={getDataInput.ordinalNumber}
+                            product={getDataInput.product}
+                            customer={getDataInput.customer}
+                            carNumber={getDataInput.carNumber}
+                            results={getDataInput.results}
+                            firstScale={getDataInput.firstScale}
+                            firstScaleDate={getDataInput.firstScaleDate}
+                            secondScale={getDataInput.secondScale}
+                            secondScaleDate={getDataInput.secondScaleDate}
+                            documents={getDataInput.documents}
+                            notes={getDataInput.notes}
+                            styleScale={getDataInput.styleScale}
+                            isDone={getDataInput.isDone}
+                        />
+                        <button type="button" className="btn btn-light">
+                            <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000", fontSize: "30px" }} onClick={() => onDeleteScale(getDataInput.id)} />
+                        </button>
+                        <ToastContainer
+                            position="top-right"
+                            autoClose={2000}
+                            hideProgressBar={false}
+                            newestOnTop={false}
+                            closeOnClick
+                            rtl={false}
+                            pauseOnFocusLoss
+                            draggable
+                            pauseOnHover
+                            theme="light"
+                        />
+                    </div>
+                    <div className="ms-auto">
+                        <Clock />
+                    </div>
+                </div>
+            </div>
             <div className="row pt-3">
                 <div className="col-sm-12">
                     <div className="table-responsive">

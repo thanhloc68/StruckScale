@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen();
 //    options.Preload = true;
 //    options.IncludeSubDomains = true;
 //    options.MaxAge = TimeSpan.FromDays(60);
-//    options.ExcludedHosts.Add("https://100.100.100.155:7007");
+//    options.ExcludedHosts.Add("https://100.100.100.156:7007");
 //});
 
 //builder.Services.AddHttpsRedirection(options =>

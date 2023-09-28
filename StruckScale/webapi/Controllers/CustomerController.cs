@@ -17,7 +17,7 @@ namespace webapi.Controllers
         [HttpGet("get")]
         public async Task<IActionResult> GetCustomer()
         {
-            var list = await dbContext.Customer.ToListAsync();
+            var list = await dbContext.Customer.AsNoTracking().ToListAsync();
             return Ok(list);
         }
         [HttpPost("add-customer")]

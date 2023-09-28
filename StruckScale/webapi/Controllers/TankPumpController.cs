@@ -34,23 +34,24 @@ namespace webapi.Controllers
                    {
                        struckID = struckTankPump.struckInfos.struckID,
                        sourceOfGoods = struckTankPump.struckInfos.sourceOfGoods,
-                       pumpVolume =  struckTankPump.struckInfos.pumpVolume,
-                       requestedVolume =  struckTankPump.struckInfos.requestedVolume,
-                       startTimePump =  struckTankPump.struckInfos.startTimePump,
-                       endTimePump = struckTankPump.struckInfos.endTimePump ,
+                       pumpVolume = struckTankPump.struckInfos.pumpVolume,
+                       requestedVolume = struckTankPump.struckInfos.requestedVolume,
+                       startTimePump = struckTankPump.struckInfos.startTimePump,
+                       endTimePump = struckTankPump.struckInfos.endTimePump,
                        createDate = struckTankPump.struckInfos.createDate,
+                       processing = struckTankPump.struckInfos.processing,
                        ordinalNumber = struckInfos != null ? struckInfos.ordinalNumber : null,
                        carNumber = struckInfos != null ? struckInfos.carNumber : null,
                        product = struckInfos != null ? struckInfos.product : null,
                        customer = struckInfos != null ? struckInfos.customer : null,
                        documents = struckInfos != null ? struckInfos.documents : null,
                        notes = struckInfos != null ? struckInfos.notes : null
-                   }).Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.pumpVolume == 0).OrderByDescending(x => x.struckID).ToListAsync();
+                   }).Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.processing <= 1).OrderByDescending(x => x.struckID).ToListAsync();
                 return Ok(list);
             }
             catch (Exception)
             {
-                throw;
+                throw new Exception("Lỗi");
             }
         }
         [HttpPut("{id}")]
@@ -58,17 +59,21 @@ namespace webapi.Controllers
         {
             var checkScaleInfo = await _dbContext.StruckInfo.FindAsync(id);
             var checkTankPump = await _dbContext.TankStruck.Where(x => x.struckID != null && x.struckID == id).FirstOrDefaultAsync();
-            if (checkTankPump == null) return BadRequest();
-            if (checkTankPump != null && checkTankPump.requestedVolume == 0)
+            if (checkTankPump == null || checkScaleInfo == null) return BadRequest();
+            if (tankStrucks.requestedVolume != 0 && checkTankPump.processing == 0 && checkTankPump.sourceOfGoods == "")
             {
                 checkTankPump.sourceOfGoods = tankStrucks.sourceOfGoods;
                 checkTankPump.requestedVolume = tankStrucks.requestedVolume;
-                checkTankPump.startTimePump = DateTime.Now;
                 checkScaleInfo.isDel = false;
+                if (checkTankPump.requestedVolume != 0 && checkTankPump.sourceOfGoods != "")
+                {
+                    checkTankPump.processing = 1; checkTankPump.startTimePump = DateTime.Now;
+                }
+                _dbContext.Entry(checkTankPump).State = EntityState.Modified;
                 await _dbContext.SaveChangesAsync();
                 return Ok(checkTankPump);
             }
-            if (checkTankPump != null && checkTankPump.requestedVolume > 0 && (tankStrucks.pumpVolume <= checkTankPump.requestedVolume))
+            if (checkTankPump.requestedVolume > 0 && checkTankPump.processing == 1 && (tankStrucks.pumpVolume <= checkTankPump.requestedVolume))
             {
                 if (checkTankPump.pumpVolume <= checkTankPump.requestedVolume)
                 {
@@ -77,8 +82,14 @@ namespace webapi.Controllers
                 }
                 else
                 {
-                    throw new Exception("Vượt qua giới hạn bơm");
+                    return null;
                 }
+                if (checkTankPump.pumpVolume == checkTankPump.requestedVolume && checkTankPump.processing != 2) 
+                {
+                    checkTankPump.processing = 2;
+                }
+               
+                _dbContext.Entry(checkTankPump).State = EntityState.Modified;
                 _dbContext?.SaveChangesAsync();
                 return Ok(checkTankPump);
             }
