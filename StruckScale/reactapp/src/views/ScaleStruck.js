@@ -1,10 +1,8 @@
-﻿/* eslint-disable no-undef */
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-constant-condition */
+﻿/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react"
 import ReactPaginate from "react-paginate";
 import Clock from "./Clock";
-import Print from "./Print";
+import Print from "../components/Print";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFile, faFloppyDisk, faCircleStop, faEdit, faPlusSquare } from "@fortawesome/free-regular-svg-icons";
 import { ToastContainer, toast } from 'react-toastify';
@@ -12,9 +10,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 import Loading from "../components/Loading";
 import PopUpCenter from "../components/popupcustomer";
-
+import url from '../components/url'
 const ScaleStruck = () => {
-    const url = 'https://100.100.100.156';
     let limit = 12;
     const [loading, setLoading] = useState(true)
     //Lấy dữ liệu từ danh sách cân
@@ -37,7 +34,13 @@ const ScaleStruck = () => {
         results: 0,
         styleScale: "",
         isDel: "",
-        isDone: false
+        isDone: false,
+        sourceOfGoods: "",
+        requestedVolume: 0,
+        pumpVolume: 0,
+        startTimePump: null,
+        endTimePump: null,
+        processing: 0
     }]);
     //Nhập số cân bằng checkbox
     const [isCheckbox, setCheckbox] = useState(false);
@@ -55,6 +58,7 @@ const ScaleStruck = () => {
         id: 0,
         shortcutName: "",
         name: "",
+        status: "",
     }]);
     //set cờ cân lần 1 lần 2
     const [isFirstScale, setIsFirstScale] = useState(false);
@@ -164,7 +168,13 @@ const ScaleStruck = () => {
             results: data?.results,
             isDel: data?.isDel,
             styleScale: data?.styleScale,
-            isDone: data?.isDone
+            isDone: data?.isDone,
+            sourceOfGoods: data?.sourceOfGoods,
+            requestedVolume: data?.requestedVolume,
+            pumpVolume: data?.pumpVolume,
+            startTimePump: data.startTimePump,
+            endTimePump: data.endTimePump,
+            processing: data?.processing
         });
         if (isFirstScale == false && isSecondScale == false || isSecondScale == true && data.firstScale <= 0 && data.secondScale <= 0) {
             setIsFirstScale(true);
@@ -246,11 +256,7 @@ const ScaleStruck = () => {
             console.log(error);
         }
     }
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        handleRefresh();
-        getList();
-    }
+    // Cập nhật cân 1,2
     const handleCheckbox = async (e) => {
         setCheckbox(e.target.checked);
         if (e.target.checked === true) {
@@ -262,6 +268,16 @@ const ScaleStruck = () => {
         else {
             return toast.error("Lỗi")
         }
+    }
+    // Checkbox status product
+    const handleCheckboxProduct = async (e, productID) => {
+        const updatedProducts = selectProduct.map(item => {
+            if (item.id === productID) {
+                return { ...item, status: e.target.checked };
+            }
+            return item;
+        });
+        setDataPopup(prev => { return { ...prev, selectProduct: updatedProducts } })
     }
     //Cập nhật số cân lần 1, lần 2
     const updateScale = async () => {
@@ -298,13 +314,14 @@ const ScaleStruck = () => {
             id: data?.id,
             shortcutName: data?.shortcutName,
             name: data?.name,
+            status: data?.status
         });
     }
     const handleAddPopup = async (e) => {
         e.preventDefault();
         const input = {
             shortcutName: getDataPopup.shortcutName,
-            name: getDataPopup.name
+            name: getDataPopup.name,
         }
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
@@ -324,19 +341,28 @@ const ScaleStruck = () => {
         }
     }
     const handleOnChangePopup = (event) => {
-        const { name, value } = event.currentTarget;
-        setDataPopup((prev) => {
-            return {
+        const { name, value, checked, type } = event.currentTarget;
+        if (type === 'checkbox') {
+            setDataPopup((prev) => ({
                 ...prev,
-                [name]: value,
-            }
-        })
+                [name]: checked,
+            }));
+        }
+        else {
+            setDataPopup((prev) => {
+                return {
+                    ...prev,
+                    [name]: value,
+                }
+            })
+        }
     }
     const handleRefreshPopup = async () => {
         setDataPopup({
             id: "",
             shortcutName: "",
-            name: ""
+            name: "",
+            status: ""
         })
     }
     const updatePopup = async () => {
@@ -347,14 +373,10 @@ const ScaleStruck = () => {
     //Lấy dữ liệu trong pop up product
     const handleAddPopupProduct = async (e) => {
         e.preventDefault();
-        const input = {
-            shortcutName: getDataPopup.shortcutName,
-            name: getDataPopup.name
-        }
         let headers = {
             'Content-Type': 'application/json;charset=UTF-8',
         };
-        await axios.post(url + ':7007/api/Product/add-product', input, headers)
+        await axios.post(url + ':7007/api/Product/add-product', getDataPopup, headers)
             .then(res => { return toast.success("Thêm thành công"), getListProduct(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
@@ -469,15 +491,14 @@ const ScaleStruck = () => {
                                                     <select className="form-select" value={getDataInput.product} onChange={(e) => setDataInput({ ...getDataInput, product: e.target.value })}>
                                                         <option value="">...</option>
                                                         {
-                                                            selectProduct.map((item, i) => <option onChange={(e) => handleOnChange(e)} key={item.id} value={item.name}>{item.shortcutName}</option>)
+                                                            selectProduct.filter(x => x.status == 1).map((item, i) => <option key={item.id} value={item.name}>{item.shortcutName}</option>)
                                                         }
-
                                                     </select>
                                                 </div>
                                                 <div className="w-75 d-flex z-0">
                                                     <input type="text" className="form-control" id="product" name="product" value={getDataInput.product} onChange={(e) => handleOnChange(e)} placeholder="Nhập hàng hóa" required />
-                                                    <button type="button" className="btn btn-light">
-                                                        <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} onClick={() => setButtonPopupProduct(true)} />
+                                                    <button type="button" className="btn btn-light" onClick={() => setButtonPopupProduct(true)}>
+                                                        <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -499,14 +520,14 @@ const ScaleStruck = () => {
                                                     <select className="form-select" value={getDataInput.customer} onChange={(e) => setDataInput({ ...getDataInput, customer: e.target.value })}>
                                                         <option value="">...</option>
                                                         {
-                                                            selectCustomer.map((item, i) => <option onChange={(e) => handleOnChange(e)} key={item.id} value={item.name}>{item.shortcutName}</option>)
+                                                            selectCustomer.map((item, i) => <option key={item.id} value={item.name}>{item.shortcutName}</option>)
                                                         }
                                                     </select>
                                                 </div>
                                                 <div className="w-75 d-flex z-0">
                                                     <input type="text" className="form-control" id="customer" name="customer" value={getDataInput.customer} onChange={(e) => handleOnChange(e)} placeholder="Nhập tên khách hàng" required />
-                                                    <button type="button" className="btn btn-light">
-                                                        <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} onClick={() => setButtonPopupCustomer(true)} />
+                                                    <button type="button" className="btn btn-light" onClick={() => setButtonPopupCustomer(true)} >
+                                                        <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} />
                                                     </button>
                                                 </div>
                                             </div>
@@ -537,8 +558,8 @@ const ScaleStruck = () => {
                         <button type="button" className="btn btn-light" onClick={handleRefresh}>
                             <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
                         </button>
-                        <button type="submit" className="btn btn-light">
-                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} onClick={(e) => handleAdd(e)} />
+                        <button type="submit" className="btn btn-light" onClick={(e) => handleAdd(e)}>
+                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
                         </button>
                         <Print
                             index={getDataInput.ordinalNumber}
@@ -555,8 +576,8 @@ const ScaleStruck = () => {
                             styleScale={getDataInput.styleScale}
                             isDone={getDataInput.isDone}
                         />
-                        <button type="button" className="btn btn-light">
-                            <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000", fontSize: "30px" }} onClick={() => onDeleteScale(getDataInput.id)} />
+                        <button type="button" className="btn btn-light" onClick={() => onDeleteScale(getDataInput.id)} >
+                            <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000", fontSize: "30px" }} />
                         </button>
                         <ToastContainer
                             position="top-right"
@@ -598,7 +619,7 @@ const ScaleStruck = () => {
                             </thead>
                             <tbody>
                                 {struckScale.map((item, i) => (
-                                    <tr key={item.id} onClick={() => {
+                                    <tr key={item.struckId} onClick={() => {
                                         setValueItem(item);
                                         colorChangeBox(i)
                                     }} className={changeColor === i ? "selected" : ""} >
@@ -666,11 +687,11 @@ const ScaleStruck = () => {
                         <button type="button" className="btn btn-light" onClick={handleRefreshPopup}>
                             <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
                         </button>
-                        <button type="submit" className="btn btn-light">
-                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} onClick={(e) => handleAddPopup(e)} />
+                        <button type="submit" className="btn btn-light" onClick={(e) => handleAddPopup(e)}>
+                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
                         </button>
-                        <button type="button" className="btn btn-light">
-                            <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} onClick={() => updatePopup(getDataPopup.id)} />
+                        <button type="button" className="btn btn-light" onClick={() => updatePopup(getDataPopup.id)}>
+                            <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} />
                         </button>
                     </div>
                     <div className="pt-10 d-flex justify-content-center">
@@ -690,8 +711,8 @@ const ScaleStruck = () => {
                                             <td>{item.shortcutName}</td>
                                             <td>{item.name}</td>
                                             <td>
-                                                <button type="button" className="btn btn-light">
-                                                    <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} onClick={() => onDeleteCustomer(item.id)} />
+                                                <button type="button" className="btn btn-light" onClick={() => onDeleteCustomer(item.id)}>
+                                                    <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} />
                                                 </button>
                                             </td>
                                         </tr>
@@ -724,16 +745,20 @@ const ScaleStruck = () => {
                                 <input type="text" style={{ width: '60%' }} className="form-control" id="name" name="name" value={getDataPopup.name} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Tên" required />
                             </div>
                         </div>
+                        <div className="w-35 d-flex justify-content-center align-items-center flex-wrap">
+                            <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Status</label>
+                            <input type="checkbox" id="status" name="status" checked={getDataPopup.status} onChange={(e) => handleOnChangePopup(e)} />
+                        </div>
                     </div>
                     <div className="p-2 d-flex align-items-center">
                         <button type="button" className="btn btn-light" onClick={handleRefreshPopup}>
                             <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
                         </button>
-                        <button type="submit" className="btn btn-light">
-                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} onClick={(e) => handleAddPopupProduct(e)} />
+                        <button type="submit" className="btn btn-light" onClick={(e) => handleAddPopupProduct(e)}>
+                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
                         </button>
-                        <button type="button" className="btn btn-light">
-                            <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} onClick={() => updatePopupProduct(getDataPopup.id)} />
+                        <button type="button" className="btn btn-light" onClick={() => updatePopupProduct(getDataPopup.id)}>
+                            <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} />
                         </button>
                     </div>
                     <div className="pt-10 d-flex justify-content-center">
@@ -742,8 +767,9 @@ const ScaleStruck = () => {
                                 <thead>
                                     <tr>
                                         <th scope="col" style={{ width: '50px' }}>#</th>
-                                        <th scope="col" style={{ width: '150px' }}>Shortcut Name</th>
-                                        <th scope="col" style={{ width: '180px' }}>Full Name</th>
+                                        <th scope="col" style={{ width: '150px' }}>Tên viết tắt</th>
+                                        <th scope="col" style={{ width: '180px' }}>Tên sản phẩm</th>
+                                        <th scope="col" style={{ width: '180px' }}>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -753,8 +779,11 @@ const ScaleStruck = () => {
                                             <td>{item.shortcutName}</td>
                                             <td>{item.name}</td>
                                             <td>
-                                                <button type="button" className="btn btn-light">
-                                                    <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} onClick={() => onDeleteProduct(item.id)} />
+                                                <input type="checkbox" onChange={(e) => handleCheckboxProduct(e, item.id)} checked={item.status} />
+                                            </td>
+                                            <td>
+                                                <button type="button" className="btn btn-light" onClick={() => onDeleteProduct(item.id)}>
+                                                    <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} />
                                                 </button>
                                             </td>
                                         </tr>

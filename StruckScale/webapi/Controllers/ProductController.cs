@@ -11,7 +11,7 @@ namespace webapi.Controllers
     public class ProductController : Controller
     {
         private readonly ScaleInfo dbContext;
-        public ProductController (ScaleInfo dbContext)
+        public ProductController(ScaleInfo dbContext)
         {
             this.dbContext = dbContext;
         }
@@ -29,6 +29,7 @@ namespace webapi.Controllers
             {
                 shortcutName = products.shortcutName,
                 name = products.name,
+                status = products.status
             };
             await dbContext.Product.AddAsync(resultsProduct);
             await dbContext.SaveChangesAsync();
@@ -44,6 +45,7 @@ namespace webapi.Controllers
                 {
                     check.shortcutName = products.shortcutName;
                     check.name = products.name;
+                    check.status = products.status;
                     await dbContext.SaveChangesAsync();
                     return Ok(check);
                 }
@@ -64,16 +66,10 @@ namespace webapi.Controllers
             try
             {
                 var check = dbContext.Product.Where(x => x.id == id).FirstOrDefault();
-                if (check != null)
-                {
-                    Product product = await dbContext.Product.FindAsync(id);
-                    dbContext?.Product.Remove(product);
-                    dbContext?.SaveChanges();
-                }
-                else
-                {
-                    return NotFound();
-                }
+                if (check == null) return NotFound();
+                Product _product = await dbContext.Product.FindAsync(id);
+                dbContext?.Product.Remove(_product);
+                dbContext?.SaveChanges();
             }
             catch (Exception)
             {

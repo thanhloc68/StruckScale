@@ -13,134 +13,74 @@ namespace webapi.Controllers
     [ApiController]
     public class HomeController : ControllerBase
     {
-        private readonly ScaleInfo dbContext;
+        private readonly ScaleInfo _dbContext;
         public HomeController(ScaleInfo dbContext)
         {
-            this.dbContext = dbContext;
-        }
-        [HttpGet("getAll")]
-        public async Task<ActionResult<StruckScaleInfomation>> GetAllList()
-        {
-            try
-            {
-                var list = await dbContext.StruckInfo.GroupJoin(
-                   dbContext.StruckScale,
-                   struckInfos => struckInfos.id,
-                   struckScales => struckScales.struckID,
-                   (struckInfos, struckScalesGroup) => new { struckInfos, struckScalesGroup }
-               )
-               .SelectMany(
-                   x => x.struckScalesGroup.DefaultIfEmpty(),
-                   (struckInfos, struckScales) => new StruckScaleInfomation()
-                   {
-                       struckId = struckInfos.struckInfos.id,
-                       ordinalNumber = struckInfos.struckInfos.ordinalNumber,
-                       carNumber = struckInfos.struckInfos.carNumber,
-                       product = struckInfos.struckInfos.product,
-                       customer = struckInfos.struckInfos.customer,
-                       documents = struckInfos.struckInfos.documents,
-                       notes = struckInfos.struckInfos.notes,
-                       firstScale = struckScales != null ? struckScales.firstScale : 0,
-                       firstScaleDate = struckScales != null ? struckScales.firstScaleDate : null,
-                       secondScale = struckScales != null ? struckScales.secondScale : 0,
-                       secondScaleDate = struckScales != null ? struckScales.secondScaleDate : null,
-                       results = struckScales != null ? struckScales.results : 0,
-                       styleScale = struckScales != null ? struckScales.styleScale : null,
-                       createDate = struckScales != null ? struckScales.createDate : null,
-                       isDone = struckScales != null ? struckScales.isDone : false
-                   }).AsNoTracking().OrderByDescending(x => x.struckId).ToListAsync();
-                return Ok(list);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _dbContext = dbContext;
         }
         [HttpGet("get")]
         public async Task<ActionResult<StruckScaleInfomation>> GetList(int pg = 1, int pageSize = 12)
         {
             DateTime dateTime = DateTime.Now;
             var DayNow = dateTime.AddDays(-1).ToShortDateString();
-            var list = await dbContext.StruckInfo.GroupJoin(
-              dbContext.StruckScale,
-              struckInfos => struckInfos.id,
-              struckScales => struckScales.struckID,
-              (struckInfos, struckScalesGroup) => new { struckInfos, struckScalesGroup }).SelectMany(
-              x => x.struckScalesGroup.DefaultIfEmpty(),
-              (struckInfos, struckScales) => new StruckScaleInfomation()
-              {
-                  struckId = struckInfos.struckInfos.id,
-                  ordinalNumber = struckInfos.struckInfos.ordinalNumber,
-                  carNumber = struckInfos.struckInfos.carNumber,
-                  product = struckInfos.struckInfos.product,
-                  customer = struckInfos.struckInfos.customer,
-                  documents = struckInfos.struckInfos.documents,
-                  notes = struckInfos.struckInfos.notes,
-                  firstScale = struckScales != null ? struckScales.firstScale : 0,
-                  firstScaleDate = struckScales != null ? struckScales.firstScaleDate : null,
-                  secondScale = struckScales != null ? struckScales.secondScale : 0,
-                  secondScaleDate = struckScales != null ? struckScales.secondScaleDate : null,
-                  results = struckScales != null ? struckScales.results : 0,
-                  styleScale = struckScales != null ? struckScales.styleScale : null,
-                  createDate = struckScales != null ? struckScales.createDate : null,
-                  isDone = struckScales != null ? struckScales.isDone : false
-              })
-              .Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.secondScale == 0).AsNoTracking().OrderByDescending(x => x.struckId).ToListAsync();
+            var list = await _dbContext.StruckInfo.GroupJoin(
+                    _dbContext.StruckScale,
+                    struckscale => struckscale.id,
+                    struckInfos => struckInfos.struckID,
+                    (struckInfos, scaleGroup) => new { struckInfos, scaleGroup })
+                .SelectMany(
+                    x => x.scaleGroup.DefaultIfEmpty(),
+                    (struckScales, struckinfoTable) => new StruckScaleInfomation()
+                    {
+                        struckId = struckScales.struckInfos.id,
+                        ordinalNumber = struckScales.struckInfos.ordinalNumber,
+                        carNumber = struckScales.struckInfos.carNumber,
+                        product = struckScales.struckInfos.product,
+                        customer = struckScales.struckInfos.customer,
+                        documents = struckScales.struckInfos.documents,
+                        notes = struckScales.struckInfos.notes,
+                        firstScale = struckinfoTable != null ? struckinfoTable.firstScale : null,
+                        firstScaleDate = struckinfoTable != null ? struckinfoTable.firstScaleDate : null,
+                        secondScale = struckinfoTable != null ? struckinfoTable.secondScale : null,
+                        secondScaleDate = struckinfoTable != null ? struckinfoTable.secondScaleDate : null,
+                        results = struckinfoTable != null ? struckinfoTable.results : null,
+                        styleScale = struckinfoTable != null ? struckinfoTable.styleScale : null,
+                        isDone = struckinfoTable != null ? struckinfoTable.isDone : null
+                    })
+               .GroupJoin(
+                        _dbContext.TankStruck,
+                        tankStrucks => tankStrucks.struckId,
+                        struckInfos => struckInfos.struckID,
+                        (struckInfos, tankPumpGroup) => new { struckInfos, tankPumpGroup })
+               .SelectMany(
+                        x => x.tankPumpGroup.DefaultIfEmpty(),
+                        (truckScales, struckInfos) => new StruckScaleInfomation()
+                        {
+                            struckId = truckScales.struckInfos.struckId,
+                            sourceOfGoods = struckInfos != null ? struckInfos.sourceOfGoods : null,
+                            pumpVolume = struckInfos != null ? struckInfos.pumpVolume : null,
+                            requestedVolume = struckInfos != null ? struckInfos.requestedVolume : null,
+                            startTimePump = struckInfos != null ? struckInfos.startTimePump : null,
+                            endTimePump = struckInfos != null ? struckInfos.endTimePump : null,
+                            createDate = struckInfos != null ? struckInfos.createDate : null,
+                            processing = struckInfos != null ? struckInfos.processing : 0,
+                            ordinalNumber = truckScales.struckInfos.ordinalNumber,
+                            firstScale = truckScales.struckInfos.firstScale,
+                            firstScaleDate = truckScales.struckInfos.firstScaleDate,
+                            secondScale = truckScales.struckInfos.secondScale,
+                            secondScaleDate = truckScales.struckInfos.secondScaleDate,
+                            results = truckScales.struckInfos.results,
+                            styleScale = truckScales.struckInfos.styleScale,
+                            carNumber = truckScales.struckInfos.carNumber,
+                            product = truckScales.struckInfos.product,
+                            customer = truckScales.struckInfos.customer,
+                            documents = truckScales.struckInfos.documents,
+                            notes = truckScales.struckInfos.notes
+                        }).Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.secondScale == 0).AsNoTracking().OrderByDescending(x => x.struckId).ToListAsync();
             var totalCount = list.Count;
             var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
             var listPerPage = list.Skip((pg - 1) * pageSize).Take(pageSize).ToList();
             return Ok(new PagedResponse<List<StruckScaleInfomation>>(listPerPage, totalCount, pg, pageSize));
-        }
-        [HttpGet("GetDataByDate/{dateTimes}")]
-        public async Task<IActionResult?> GetDataByDate(string? dateTimes)
-        {
-            if (dateTimes == null) { return Ok(); }
-            string[] date = dateTimes.Split(" - ");
-            var start = date[0].Replace("%2F", "-");
-            var end = date[1].Replace("%2F", "-");
-            if (start != null)
-            {
-                DateTime startDateValue = DateTime.ParseExact(start, "dd-MM-yyyy", CultureInfo.InvariantCulture);
-                DateTime endDateValue = DateTime.ParseExact(end, "dd-MM-yyyy", CultureInfo.InvariantCulture).AddDays(1).AddSeconds(-1);
-                var getDate = await dbContext.StruckInfo.GroupJoin(
-                   dbContext.StruckScale,
-                   struckInfos => struckInfos.id,
-                   struckScales => struckScales.struckID,
-                   (struckInfos, struckScalesGroup) => new { struckInfos, struckScalesGroup }
-               )
-               .SelectMany(
-                   x => x.struckScalesGroup.DefaultIfEmpty(),
-                   (struckInfos, struckScales) => new StruckScaleInfomation()
-                   {
-                       struckId = struckInfos.struckInfos.id,
-                       ordinalNumber = struckInfos.struckInfos.ordinalNumber,
-                       carNumber = struckInfos.struckInfos.carNumber,
-                       documents = struckInfos.struckInfos.documents,
-                       product = struckInfos.struckInfos.product,
-                       customer = struckInfos.struckInfos.customer,
-                       firstScale = struckScales != null ? struckScales.firstScale : 0,
-                       secondScale = struckScales != null ? struckScales.secondScale : 0,
-                       results = struckScales != null ? struckScales.results : 0,
-                       firstScaleDate = struckScales != null ? struckScales.firstScaleDate : null,
-                       secondScaleDate = struckScales != null ? struckScales.secondScaleDate : null,
-                       createDate = struckScales != null ? struckScales.createDate : null,
-                       styleScale = struckScales != null ? struckScales.styleScale : null,
-                       notes = struckInfos.struckInfos.notes
-                   }).Where(x => x.firstScaleDate >= startDateValue && (DateTime?)x.secondScaleDate <= endDateValue).AsNoTracking().ToListAsync();
-                return Ok(getDate);
-            }
-            return Ok();
-        }
-        [HttpGet("search/{search}")]
-        public IActionResult Search(string search)
-        {
-            var StruckInfo = dbContext.StruckInfo.Where(p => p.customer != null && p.customer.Contains(search));
-            var results = StruckInfo.Select(p => new StruckInfo
-            {
-                carNumber = p.carNumber,
-                customer = p.customer
-            });
-            return Ok(results.ToList());
         }
         [HttpPost("post")]
         public async Task<IActionResult> AddPost(StruckInfo struckScaleInfos)
@@ -149,7 +89,7 @@ namespace webapi.Controllers
             int? index = 1;
             DateTime dateTime = DateTime.Now;
             var DayNow = dateTime.AddDays(-1);
-            var getNum = dbContext.StruckInfo.Where(x => x.ordinalNumber > 0).Where(x => x.createDate >= DayNow).ToList();
+            var getNum = _dbContext.StruckInfo.Where(x => x.ordinalNumber > 0).Where(x => x.createDate >= DayNow).ToList();
             foreach (var item in getNum)
             {
                 index += 1;
@@ -170,8 +110,8 @@ namespace webapi.Controllers
                 isDel = true,
                 createDate = dateTime
             };
-            await dbContext.StruckInfo.AddAsync(resultInfo);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.StruckInfo.AddAsync(resultInfo);
+            await _dbContext.SaveChangesAsync();
             var resultScale = new StruckScales()
             {
                 struckID = resultInfo.id,
@@ -184,8 +124,8 @@ namespace webapi.Controllers
                 createDate = dateTime,
                 isDone = false
             };
-            await dbContext.StruckScale.AddAsync(resultScale);
-            //await dbContext.SaveChangesAsync();
+            await _dbContext.StruckScale.AddAsync(resultScale);
+            //await _dbContext.SaveChangesAsync();
             var resultTankPump = new TankStrucks()
             {
                 struckID = resultInfo.id,
@@ -197,21 +137,21 @@ namespace webapi.Controllers
                 processing = 0,
                 createDate = dateTime
             };
-            await dbContext.TankStruck.AddAsync(resultTankPump);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.TankStruck.AddAsync(resultTankPump);
+            await _dbContext.SaveChangesAsync();
             return Ok(resultInfo);
         }
         [HttpGet("detail/{id}")]
         public async Task<IActionResult> GetStruckScale(int id)
         {
-            var list = await dbContext.StruckInfo.FindAsync(id);
+            var list = await _dbContext.StruckInfo.FindAsync(id);
             return Ok(list);
         }
         [HttpPut("{id}")]
         public async Task<IActionResult> EditScale(int id, [FromBody] StruckScales struckScaleInfo)
         {
-            var checkScaleInfo = await dbContext.StruckInfo.FindAsync(id);
-            var checkScale = await dbContext.StruckScale.Where(x => x.struckID != null && x.struckID == id).FirstOrDefaultAsync();
+            var checkScaleInfo = await _dbContext.StruckInfo.FindAsync(id);
+            var checkScale = await _dbContext.StruckScale.Where(x => x.struckID != null && x.struckID == id).FirstOrDefaultAsync();
             if (checkScale == null) return BadRequest();
             if (checkScaleInfo != null && checkScale?.id != null && checkScale.firstScale == 0)
             {
@@ -219,7 +159,7 @@ namespace webapi.Controllers
                 checkScale.firstScale = struckScaleInfo.firstScale;
                 checkScale.firstScaleDate = DateTime.Now;
                 checkScaleInfo.isDel = false;
-                await dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
                 return Ok(checkScale);
             }
             if (checkScaleInfo != null && checkScale?.id != null && checkScale.secondScale == 0)
@@ -237,7 +177,7 @@ namespace webapi.Controllers
                     checkScale.results = Math.Abs((double)checkScale.results);
                 }
                 checkScale.secondScaleDate = DateTime.Now;
-                await dbContext.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
                 return Ok(checkScale);
             }
             return NotFound();
@@ -251,16 +191,16 @@ namespace webapi.Controllers
                 {
                     throw new Exception("Chưa chọn xe");
                 }
-                var checkinfo = await dbContext.StruckInfo.Where(p => p.id == id).FirstOrDefaultAsync(); //xóa cái này cuối cùng
-                var checkScale = await dbContext.StruckScale.Where(p => p.struckID != null && p.struckID == id).FirstOrDefaultAsync();
-                var tankPump = await dbContext.TankStruck.Where(p => p.struckID != null && p.struckID == id).FirstOrDefaultAsync();
+                var checkinfo = await _dbContext.StruckInfo.Where(p => p.id == id).FirstOrDefaultAsync(); //xóa cái này cuối cùng
+                var checkScale = await _dbContext.StruckScale.Where(p => p.struckID != null && p.struckID == id).FirstOrDefaultAsync();
+                var tankPump = await _dbContext.TankStruck.Where(p => p.struckID != null && p.struckID == id).FirstOrDefaultAsync();
                 if (checkinfo?.isDel == true && checkScale != null && tankPump != null)
                 {
-                    dbContext.Remove(checkScale);
-                    dbContext.Remove(tankPump);
-                    dbContext.SaveChanges();
-                    dbContext.Remove(checkinfo);
-                    dbContext.SaveChanges();
+                    _dbContext.Remove(checkScale);
+                    _dbContext.Remove(tankPump);
+                    _dbContext.SaveChanges();
+                    _dbContext.Remove(checkinfo);
+                    _dbContext.SaveChanges();
                 }
                 else
                 {

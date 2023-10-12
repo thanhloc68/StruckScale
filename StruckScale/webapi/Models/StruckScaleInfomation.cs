@@ -15,6 +15,12 @@
         public DateTime? secondScaleDate { get; set; }
         public DateTime? createDate { get; set; }
         public string? styleScale { get; set; }
+        public string? sourceOfGoods { get; set; }
+        public int? requestedVolume { get; set; }
+        public int? pumpVolume { get; set; }
+        public DateTime? startTimePump { get; set; }
+        public DateTime? endTimePump { get; set; }
+        public int processing { get; set; }
         public string? notes { get; set; }
         public bool? isDone { get; set; }
     }

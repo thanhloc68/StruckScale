@@ -16,37 +16,66 @@ namespace webapi.Controllers
             this._dbContext = dbContext;
         }
         [HttpGet("GetList")]
-        public async Task<ActionResult<TankPumpInfomation>> GetList()
+        public async Task<ActionResult<StruckScaleInfomation>> GetList()
         {
             try
             {
                 DateTime dateTime = DateTime.Now;
                 var DayNow = dateTime.AddDays(-1).ToShortDateString();
-                var list = await _dbContext.TankStruck.GroupJoin(
-                   _dbContext.StruckInfo,
-                   tankStrucks => tankStrucks.struckID,
-                   struckInfos => struckInfos.id,
-                   (struckInfos, tankPumpGroup) => new { struckInfos, tankPumpGroup }
-               )
+                var list = await _dbContext.StruckInfo.GroupJoin(
+                    _dbContext.StruckScale,
+                    struckscale => struckscale.id,
+                    struckInfos => struckInfos.struckID,
+                    (struckInfos, scaleGroup) => new { struckInfos, scaleGroup })
+                .SelectMany(
+                    x => x.scaleGroup.DefaultIfEmpty(),
+                    (struckScales, struckinfoTable) => new StruckScaleInfomation()
+                    {
+                        struckId = struckScales.struckInfos.id,
+                        ordinalNumber = struckScales.struckInfos.ordinalNumber,
+                        carNumber = struckScales.struckInfos.carNumber,
+                        product = struckScales.struckInfos.product,
+                        customer = struckScales.struckInfos.customer,
+                        documents = struckScales.struckInfos.documents,
+                        notes = struckScales.struckInfos.notes,
+                        firstScale = struckinfoTable != null ? struckinfoTable.firstScale : null,
+                        firstScaleDate = struckinfoTable != null ? struckinfoTable.firstScaleDate : null,
+                        secondScale = struckinfoTable != null ? struckinfoTable.secondScale : null,
+                        secondScaleDate = struckinfoTable != null ? struckinfoTable.secondScaleDate : null,
+                        results = struckinfoTable != null ? struckinfoTable.results : null,
+                        styleScale = struckinfoTable != null ? struckinfoTable.styleScale : null,
+                        isDone = struckinfoTable != null ? struckinfoTable.isDone : null
+                    })
+               .GroupJoin(
+                        _dbContext.TankStruck,
+                        tankStrucks => tankStrucks.struckId,
+                        struckInfos => struckInfos.struckID,
+                        (struckInfos, tankPumpGroup) => new { struckInfos, tankPumpGroup })
                .SelectMany(
-                   x => x.tankPumpGroup.DefaultIfEmpty(),
-                   (struckTankPump, struckInfos) => new TankPumpInfomation()
-                   {
-                       struckID = struckTankPump.struckInfos.struckID,
-                       sourceOfGoods = struckTankPump.struckInfos.sourceOfGoods,
-                       pumpVolume = struckTankPump.struckInfos.pumpVolume,
-                       requestedVolume = struckTankPump.struckInfos.requestedVolume,
-                       startTimePump = struckTankPump.struckInfos.startTimePump,
-                       endTimePump = struckTankPump.struckInfos.endTimePump,
-                       createDate = struckTankPump.struckInfos.createDate,
-                       processing = struckTankPump.struckInfos.processing,
-                       ordinalNumber = struckInfos != null ? struckInfos.ordinalNumber : null,
-                       carNumber = struckInfos != null ? struckInfos.carNumber : null,
-                       product = struckInfos != null ? struckInfos.product : null,
-                       customer = struckInfos != null ? struckInfos.customer : null,
-                       documents = struckInfos != null ? struckInfos.documents : null,
-                       notes = struckInfos != null ? struckInfos.notes : null
-                   }).Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.processing <= 1).OrderByDescending(x => x.struckID).ToListAsync();
+                        x => x.tankPumpGroup.DefaultIfEmpty(),
+                        (truckScales, struckInfos) => new StruckScaleInfomation()
+                        {
+                            struckId = truckScales.struckInfos.struckId,
+                            sourceOfGoods = struckInfos != null ? struckInfos.sourceOfGoods : null,
+                            pumpVolume = struckInfos != null ? struckInfos.pumpVolume : null,
+                            requestedVolume = struckInfos != null ? struckInfos.requestedVolume : null,
+                            startTimePump = struckInfos != null ? struckInfos.startTimePump : null,
+                            endTimePump = struckInfos != null ? struckInfos.endTimePump : null,
+                            createDate = struckInfos != null ? struckInfos.createDate : null,
+                            processing = struckInfos != null ? struckInfos.processing : 0,
+                            ordinalNumber = truckScales.struckInfos.ordinalNumber,
+                            firstScale = truckScales.struckInfos.firstScale,
+                            firstScaleDate = truckScales.struckInfos.firstScaleDate,
+                            secondScale = truckScales.struckInfos.secondScale,
+                            secondScaleDate = truckScales.struckInfos.secondScaleDate,
+                            results = truckScales.struckInfos.results,
+                            styleScale = truckScales.struckInfos.styleScale,
+                            carNumber = truckScales.struckInfos.carNumber,
+                            product = truckScales.struckInfos.product,
+                            customer = truckScales.struckInfos.customer,
+                            documents = truckScales.struckInfos.documents,
+                            notes = truckScales.struckInfos.notes
+                        }).Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.processing <= 1).OrderByDescending(x => x.struckId).ToListAsync();
                 return Ok(list);
             }
             catch (Exception)
@@ -84,11 +113,11 @@ namespace webapi.Controllers
                 {
                     return null;
                 }
-                if (checkTankPump.pumpVolume == checkTankPump.requestedVolume && checkTankPump.processing != 2) 
+                if (checkTankPump.pumpVolume == checkTankPump.requestedVolume && checkTankPump.processing != 2)
                 {
                     checkTankPump.processing = 2;
                 }
-               
+
                 _dbContext.Entry(checkTankPump).State = EntityState.Modified;
                 _dbContext?.SaveChangesAsync();
                 return Ok(checkTankPump);

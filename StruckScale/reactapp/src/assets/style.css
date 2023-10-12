@@ -13,7 +13,6 @@ body {
 
 .tablebox {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     flex-direction: row;
     padding-bottom: 10px;
@@ -32,25 +31,21 @@ body {
             width: 100% !important;
         }
 }
-
-.input-group .form-control {
-    width: 80% !important;
-}
-
-.tablebox > .searchbox {
+.table-box > .typeReport,
+.tablebox > .searchbox,
+.tablebox > .calendar,
+.table-box > .export {
     display: flex;
-    width: 50%;
     justify-content: space-around;
     align-items: center;
+    width: 30%;
 }
-
-.tablebox > .calendar {
-    display: flex;
-    width: 40%;
-    align-items: center;
-    justify-content: center;
+.tablebox, .searchbox, .calendar, .export, .typeReport{
+    padding-right: 20px;
 }
-
+.tablebox  .typeReport  select{
+    width:200px;
+}
 .mbsc-ios.mbsc-textfield-wrapper-box,
 .mbsc-ios.mbsc-textfield-wrapper-outline {
     margin: 0px !important;
@@ -125,12 +120,16 @@ li.nav-item:hover {
     -webkit-overflow-scrolling: touch;
 }
 
+    .table-popup > table th td {
+        text-align: center
+    }
+
 .table-responsive {
     max-width: 100%;
     max-height: 400px
 }
 
-.table-responsive td, .table-responsive th {
+    .table-responsive td, .table-responsive th {
         white-space: nowrap; /* Prevents text from wrapping */
         overflow: hidden;
         text-overflow: ellipsis; /* Truncates text with an ellipsis (...) */
@@ -164,7 +163,7 @@ li.nav-item:hover {
     background-color: #fff;
 }
 
-.popup-inner .close-btn {
+    .popup-inner .close-btn {
         position: absolute;
         top: 16px;
         right: 16px;
@@ -208,6 +207,7 @@ li.nav-item:hover {
     background-position: 0 100%;
     transition: background-position 3000ms, color 3000ms ease, border-color 3000ms ease;
 }
+
 .disabled-row {
     pointer-events: none; /* Disable all click events on the row */
     opacity: 0.5; /* Optionally reduce opacity to indicate it's disabled */

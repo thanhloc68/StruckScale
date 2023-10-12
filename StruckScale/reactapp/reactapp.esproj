@@ -11,4 +11,9 @@
     <!-- Folder where production build objects will be placed -->
     <BuildOutputFolder>$(MSBuildProjectDirectory)\build</BuildOutputFolder>
   </PropertyGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties build_4static_4css_4main_10ec1bbd2_1css_1map__JsonSchema="" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

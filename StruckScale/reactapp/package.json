@@ -28,7 +28,7 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "set HTTPS=true&&react-scripts --openssl-legacy-provider start",
+    "start": "set HTTPS=false&&react-scripts --openssl-legacy-provider start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
