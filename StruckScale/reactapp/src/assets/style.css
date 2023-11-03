@@ -1,5 +1,18 @@
 body {
     width: 100%;
+    animation: fadeInAnimation ease 0.5s;
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fadeInAnimation {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 .w-85 {
@@ -31,6 +44,7 @@ body {
             width: 100% !important;
         }
 }
+
 .table-box > .typeReport,
 .tablebox > .searchbox,
 .tablebox > .calendar,
@@ -40,12 +54,15 @@ body {
     align-items: center;
     width: 30%;
 }
-.tablebox, .searchbox, .calendar, .export, .typeReport{
+
+.tablebox, .searchbox, .calendar, .export, .typeReport {
     padding-right: 20px;
 }
-.tablebox  .typeReport  select{
-    width:200px;
-}
+
+    .tablebox .typeReport select {
+        width: 200px;
+    }
+
 .mbsc-ios.mbsc-textfield-wrapper-box,
 .mbsc-ios.mbsc-textfield-wrapper-outline {
     margin: 0px !important;
@@ -211,4 +228,78 @@ li.nav-item:hover {
 .disabled-row {
     pointer-events: none; /* Disable all click events on the row */
     opacity: 0.5; /* Optionally reduce opacity to indicate it's disabled */
+}
+
+.h-custom {
+    height: calc(100% - 73px);
+}
+
+@media (max-width: 450px) {
+    .h-custom {
+        height: 100%;
+    }
+}
+/* Media Queries */
+/* Smartphones, small screens (portrait and landscape) ———– */
+@media only screen and (min-device-width : 320px) and (max-device-width : 480px) {
+    .w--10 {
+        width: 100% !important
+    }
+
+    .w--90 {
+        width: 100% !important
+    }
+
+    .glass {
+        margin: 127px 85px;
+        width: 88px;
+    }
+}
+
+/* Smartphones, small screens (landscape) ———– */
+@media only screen and (min-width : 321px) {
+    .w--10 {
+        width: 100% !important
+    }
+
+    .w--90 {
+        width: 100% !important
+    }
+
+    .glass {
+        margin: 120px 335px;
+        width: 330px;
+    }
+}
+
+/* Smartphones (portrait) ———– */
+@media only screen and (max-width : 320px) {
+    .w--10 {
+        width: 100% !important
+    }
+
+    .w--90 {
+        width: 100% !important
+    }
+}
+/* Desktops and laptops ———– */
+@media only screen and (min-width : 1224px) {
+    .w--10 {
+        width: 10% !important
+    }
+
+    .w--90 {
+        width: 90% !important
+    }
+}
+
+/* Large screens ———– */
+@media only screen and (min-width : 1824px) {
+    .w--10 {
+        width: 10% !important
+    }
+
+    .w--90 {
+        width: 90% !important
+    }
 }

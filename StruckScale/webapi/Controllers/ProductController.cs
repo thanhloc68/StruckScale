@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.Data;
@@ -10,19 +10,18 @@ namespace webapi.Controllers
     [ApiController]
     public class ProductController : Controller
     {
-        private readonly ScaleInfo dbContext;
+        private readonly ScaleInfo _dbContext;
         public ProductController(ScaleInfo dbContext)
         {
-            this.dbContext = dbContext;
+            _dbContext = dbContext;
         }
-
-        [HttpGet("get")]
+        [HttpGet("get"), Authorize]
         public async Task<IActionResult> GetProduct()
         {
-            var list = await dbContext.Product.AsNoTracking().ToListAsync();
+            var list = await _dbContext.Product.AsNoTracking().ToListAsync();
             return Ok(list);
         }
-        [HttpPost("add-product")]
+        [HttpPost("add-product"), Authorize]
         public async Task<IActionResult> CreateProduct(Product products)
         {
             var resultsProduct = new Product()
@@ -31,22 +30,23 @@ namespace webapi.Controllers
                 name = products.name,
                 status = products.status
             };
-            await dbContext.Product.AddAsync(resultsProduct);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.Product.AddAsync(resultsProduct);
+            await _dbContext.SaveChangesAsync();
             return Ok(resultsProduct);
         }
-        [HttpPut("{id}")]
+        [HttpPut("{id}"), Authorize]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product products)
         {
             try
             {
-                var check = await dbContext.Product.FindAsync(id);
+                var check = await _dbContext.Product.FindAsync(id);
                 if (check != null)
                 {
                     check.shortcutName = products.shortcutName;
                     check.name = products.name;
                     check.status = products.status;
-                    await dbContext.SaveChangesAsync();
+                    _dbContext.Entry(check).State = EntityState.Modified;
+                    await _dbContext.SaveChangesAsync();
                     return Ok(check);
                 }
                 else
@@ -60,16 +60,17 @@ namespace webapi.Controllers
             }
             return Ok();
         }
-        [HttpDelete("delete")]
+        [HttpDelete("delete"), Authorize]
         public async Task<IActionResult> DeleteProduct(int? id)
         {
             try
             {
-                var check = dbContext.Product.Where(x => x.id == id).FirstOrDefault();
+                var check = _dbContext.Product.Where(x => x.id == id).FirstOrDefault();
                 if (check == null) return NotFound();
-                Product _product = await dbContext.Product.FindAsync(id);
-                dbContext?.Product.Remove(_product);
-                dbContext?.SaveChanges();
+                Product? _product = await _dbContext.Product.FindAsync(id);
+                if (_product == null) return NotFound(); ;
+                _dbContext?.Product.Remove(_product);
+                _dbContext?.SaveChanges();
             }
             catch (Exception)
             {

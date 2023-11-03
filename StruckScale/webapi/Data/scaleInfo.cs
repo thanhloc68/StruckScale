@@ -6,7 +6,8 @@ namespace webapi.Data
     public class ScaleInfo : DbContext
     {
         public ScaleInfo(DbContextOptions<ScaleInfo> options):base(options) { }
-
+        public DbSet<Accounts> Account { get; set; }
+        public DbSet<Roles> Roles { get; set; }
         public DbSet<StruckInfo> StruckInfo { get; set; }
         public DbSet<StruckScales> StruckScale { get; set; }
         public DbSet<TankStrucks> TankStruck { get; set; }

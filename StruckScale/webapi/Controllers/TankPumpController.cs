@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.Data;
@@ -8,6 +8,7 @@ namespace webapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin, Pump")]
     public class TankPumpController : Controller
     {
         private readonly ScaleInfo _dbContext;
@@ -108,14 +109,10 @@ namespace webapi.Controllers
                 {
                     checkTankPump.pumpVolume = tankStrucks.pumpVolume;
                     checkTankPump.endTimePump = DateTime.Now;
-                }
-                else
-                {
-                    return null;
-                }
-                if (checkTankPump.pumpVolume == checkTankPump.requestedVolume && checkTankPump.processing != 2)
-                {
-                    checkTankPump.processing = 2;
+                    if (checkTankPump.pumpVolume == checkTankPump.requestedVolume && checkTankPump.processing != 2)
+                    {
+                        checkTankPump.processing = 2;
+                    }
                 }
 
                 _dbContext.Entry(checkTankPump).State = EntityState.Modified;

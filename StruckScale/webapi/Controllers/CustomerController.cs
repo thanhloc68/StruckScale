@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.Data;
 using webapi.Models;
@@ -9,18 +10,18 @@ namespace webapi.Controllers
     [ApiController]
     public class CustomerController : Controller
     {
-        private readonly ScaleInfo dbContext;
+        private readonly ScaleInfo _dbContext;
         public CustomerController(ScaleInfo dbContext)
         {
-            this.dbContext = dbContext;
+            _dbContext = dbContext;
         }
-        [HttpGet("get")]
+        [HttpGet("get"), Authorize]
         public async Task<IActionResult> GetCustomer()
         {
-            var list = await dbContext.Customer.AsNoTracking().ToListAsync();
+            var list = await _dbContext.Customer.AsNoTracking().ToListAsync();
             return Ok(list);
         }
-        [HttpPost("add-customer")]
+        [HttpPost("add-customer"), Authorize]
         public async Task<IActionResult> CreateCustomer(Customer customers)
         {
             var resultsCustomer = new Customer()
@@ -28,21 +29,22 @@ namespace webapi.Controllers
                 shortcutName = customers.shortcutName,
                 name = customers.name,
             };
-            await dbContext.Customer.AddAsync(resultsCustomer);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.Customer.AddAsync(resultsCustomer);
+            await _dbContext.SaveChangesAsync();
             return Ok(resultsCustomer);
         }
-        [HttpPut("{id}")]
+        [HttpPut("{id}"), Authorize]
         public async Task<IActionResult> UpdateCustomer(int id, [FromBody] Customer customer)
         {
             try
             {
-                var check = await dbContext.Customer.FindAsync(id);
+                var check = await _dbContext.Customer.FindAsync(id);
                 if (check != null)
                 {
                     check.shortcutName = customer.shortcutName;
                     check.name = customer.name;
-                    await dbContext.SaveChangesAsync();
+                    _dbContext.Entry(check).State = EntityState.Modified;
+                    await _dbContext.SaveChangesAsync();
                     return Ok(check);
                 }
                 else
@@ -56,17 +58,18 @@ namespace webapi.Controllers
             }
             return Ok();
         }
-        [HttpDelete("delete")]
+        [HttpDelete("delete"), Authorize]
         public async Task<IActionResult> DeleteCustomer(int? id)
         {
             try
             {
-                var check = dbContext.Customer.Where(x => x.id == id).FirstOrDefault();
+                var check = _dbContext.Customer.Where(x => x.id == id).FirstOrDefault();
                 if (check != null)
                 {
-                    Customer customers = await dbContext.Customer.FindAsync(id);
-                    dbContext?.Customer.Remove(customers);
-                    dbContext?.SaveChanges();
+                    Customer? customers = await _dbContext.Customer.FindAsync(id);
+                    if (customers == null) return NotFound();
+                    _dbContext?.Customer.Remove(customers);
+                    _dbContext?.SaveChanges();
                 }
                 else
                 {

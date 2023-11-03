@@ -1,25 +1,23 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections;
-using System.Globalization;
-using System.Linq;
 using webapi.Data;
 using webapi.Models;
-using webapi.Wrapper;
 
 namespace webapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class HomeController : ControllerBase
+    [Authorize(Roles = "Admin,Scale")]
+    public class ScaleController : ControllerBase
     {
         private readonly ScaleInfo _dbContext;
-        public HomeController(ScaleInfo dbContext)
+        public ScaleController(ScaleInfo dbContext)
         {
             _dbContext = dbContext;
         }
         [HttpGet("get")]
-        public async Task<ActionResult<StruckScaleInfomation>> GetList(int pg = 1, int pageSize = 12)
+        public async Task<ActionResult<StruckScaleInfomation>> GetList()
         {
             DateTime dateTime = DateTime.Now;
             var DayNow = dateTime.AddDays(-1).ToShortDateString();
@@ -77,14 +75,12 @@ namespace webapi.Controllers
                             documents = truckScales.struckInfos.documents,
                             notes = truckScales.struckInfos.notes
                         }).Where(x => x.createDate >= Convert.ToDateTime(DayNow) || x.secondScale == 0).AsNoTracking().OrderByDescending(x => x.struckId).ToListAsync();
-            var totalCount = list.Count;
-            var totalPages = (int)Math.Ceiling((decimal)totalCount / pageSize);
-            var listPerPage = list.Skip((pg - 1) * pageSize).Take(pageSize).ToList();
-            return Ok(new PagedResponse<List<StruckScaleInfomation>>(listPerPage, totalCount, pg, pageSize));
+            return Ok(list);
         }
         [HttpPost("post")]
         public async Task<IActionResult> AddPost(StruckInfo struckScaleInfos)
         {
+         
             if (struckScaleInfos.carNumber == "" || struckScaleInfos.customer == "" || struckScaleInfos.documents == "" || struckScaleInfos.product == "") return BadRequest();
             int? index = 1;
             DateTime dateTime = DateTime.Now;
@@ -125,7 +121,6 @@ namespace webapi.Controllers
                 isDone = false
             };
             await _dbContext.StruckScale.AddAsync(resultScale);
-            //await _dbContext.SaveChangesAsync();
             var resultTankPump = new TankStrucks()
             {
                 struckID = resultInfo.id,
@@ -174,7 +169,7 @@ namespace webapi.Controllers
                 else
                 {
                     checkScale.styleScale = "Xuất hàng";
-                    checkScale.results = Math.Abs((double)checkScale.results);
+                    if (checkScale.results.HasValue) checkScale.results = Math.Abs((double)checkScale.results);
                 }
                 checkScale.secondScaleDate = DateTime.Now;
                 await _dbContext.SaveChangesAsync();
@@ -182,7 +177,7 @@ namespace webapi.Controllers
             }
             return NotFound();
         }
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int? id)
         {
             try
@@ -204,12 +199,12 @@ namespace webapi.Controllers
                 }
                 else
                 {
-                    throw new Exception("Lỗi không được xóa");
+                   return BadRequest("Không được xóa");
                 }
             }
             catch (Exception)
             {
-                throw;
+                return BadRequest("Lỗi");
             }
             return Ok();
         }

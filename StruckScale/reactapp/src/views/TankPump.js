@@ -1,12 +1,13 @@
 ﻿/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react"
+import {useNavigate} from "react-router-dom"
 import axios from 'axios';
 import ReactPaginate from "react-paginate";
 import Print from "../components/Print";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFile, faFloppyDisk, faCircleStop } from "@fortawesome/free-regular-svg-icons";
+import { faFile } from "@fortawesome/free-regular-svg-icons";
 import MoTorOn from "../assets/img/On.png";
 import MoTorOff from "../assets/img/Off.png";
 import url from '../components/url'
@@ -40,11 +41,24 @@ const TankPump = () => {
     const [isCheckValue, setCheckValue] = useState(null);
     const [isMotor, setIsMotor] = useState(false);
     const [animation, setAnimation] = useState(0);
+    const [roles, setRoles] = useState(false);
     const pagesVisited = pageNumber * limit;
-    const [product, setProduct] = useState([])
+    const [product, setProduct] = useState([]);
     const [productName, setProductName] = useState("LASP")
     const [activeIndex, setActiveIndex] = useState(0)
-
+    const navigate = useNavigate();
+    const token = JSON.parse(localStorage.getItem("token"));
+    let header;
+    if (token) {
+        header = {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Authorization": `Bearer ${(token.accessToken).replace(/"/g, '')}`
+        }
+    }
+    else {
+        navigate("/")
+    }
     useEffect(() => {
         getList();
         getProduct();
@@ -86,16 +100,24 @@ const TankPump = () => {
         }
         return () => { clearInterval(interval); clearTimeout(intervalTimeOut); }
     }, [getDataInput, isMotor])
+    const getProduct = async () => {
+        await axios(url + ':7007/api/Product/get', { headers: header }).then(x => { setProduct(x.data) }).catch(error => console.log(error));
+    }
     const colorChangeBox = async (selected) => {
         if (selected != undefined) {
             await setChangeColor(selected)
         }
     }
     const getList = async () => {
-        await axios(url + ':7007/api/TankPump/GetList').then(x => { setTankPump(x.data) }).catch(error => console.log(error));
-    }
-    const getProduct = async () => {
-        await axios(url + ':7007/api/Product/get').then(x => { setProduct(x.data) }).catch(error => console.log(error));
+        try {
+            await axios(url + ':7007/api/TankPump/GetList', { headers: header }).then(x => { setTankPump(x.data) })
+        } catch (e) {
+            if (e.response) {
+                if (e.response.status == "403") {
+                    setRoles(true)
+                }
+            }
+        }
     }
     const pageCount = Math.ceil(tankPump.length / limit);
     const handlePageClick = async (data) => {
@@ -190,7 +212,7 @@ const TankPump = () => {
     }
     const updateTankPump = async () => {
         await tankpumpvalue();
-        const response = await axios.put(url + ':7007/api/TankPump/' + getDataInput.id, getDataInput)
+        const response = await axios.put(url + ':7007/api/TankPump/' + getDataInput.id, getDataInput, { headers: header })
             .then(res => {
                 getList();
             }).catch(error => { console.log(error) })
@@ -260,212 +282,216 @@ const TankPump = () => {
     }
     return (
         <>
-            <ul className="nav nav-tabs" id="myTab" role="tablist">
-                {product.filter(x => x.status == 1).map((item, index) => (
-                    <li className="nav-item" role="presentation" key={item.id}>
-                        <button className={`nav-link ${index === activeIndex ? 'active' : ''}`}
-                            onClick={() => setValueProduct(item.name, index)}
-                            id={`${item.name}-tab`}
-                            data-bs-toggle="tab"
-                            data-bs-target={`#${item.name}-tab-pane`}
-                            type="button"
-                            role="tab"
-                            aria-controls={`${item.name}`}
-                            aria-selected={`${index === activeIndex ? 'true' : 'false'}`}>Xe bồn {item.name}</button>
-                    </li>
-                ))}
-            </ul>
-            <div className="tab-content" id="myTabContent">
-                <div className="container">
-                    <div className="row">
-                        <div className="col-md-12">
-                            <div className="glass">
-                                <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
-                                    <span style={{ zIndex: '1' }}>{getDataInput.id != null ? ((getDataInput.pumpVolume / getDataInput.requestedVolume) * 100).toFixed(2) : '0'} %</span>
-                                </div>
-                                <div className="water" style={{ height: animation + '%', maxHeight: '100%' }}></div>
-                            </div>
-                            <div className="d-flex flex-column">
-                                {isMotor ? <img src={MoTorOn} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} /> : <img src={MoTorOff} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} />}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="row">
-                    <div><span style={{ fontSize: "30px" }}>Khối lượng (Kg): {pumpValue}</span></div>
-                    <div className="check-scale">
-                        <div className="col-md-12">
-                            <div className="input-group">
-                                <div className="col-md-2 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Khách hàng</span>
-                                        <input type="text" className="form-control" id="customer" name="customer" placeholder="#######" value={getDataInput.customer} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '30px' }} />
-                                    </div>
-                                </div>
-                                <div className="col-md-2 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Nguồn hàng</span>
-                                        <input type="text" className="form-control" id="sourceOfGoods" name="sourceOfGoods" placeholder="#######" value={getDataInput.sourceOfGoods} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '30px' }} />
-                                    </div>
-                                </div>
-                                <div className="col-md-2 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Số xe</span>
-                                        <input type="text" className="form-control" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '30px' }} />
-                                    </div>
-                                </div>
-                                <div className="col-md-2 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Khối lượng yêu cầu</span>
-                                        <input type="text" className="form-control" id="requestedVolume" name="requestedVolume" placeholder="#######" value={getDataInput.requestedVolume} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '30px' }} />
-                                    </div>
-                                </div>
-                                <div className="col-md-2 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Lưu</span>
-                                        <div className="d-flex justify-content-center align-items-center pt-3">
-                                            <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} />
+            {roles ? "Bạn không có quyền truy cập" :
+                <>
+                    <ul className="nav nav-tabs" id="myTab" role="tablist">
+                        {product.filter(x => x.status == 1).map((item, index) => (
+                            <li className="nav-item" role="presentation" key={item.id}>
+                                <button className={`nav-link ${index === activeIndex ? 'active' : ''}`}
+                                    onClick={() => setValueProduct(item.name, index)}
+                                    id={`${item.name}-tab`}
+                                    data-bs-toggle="tab"
+                                    data-bs-target={`#${item.name}-tab-pane`}
+                                    type="button"
+                                    role="tab"
+                                    aria-controls={`${item.name}`}
+                                    aria-selected={`${index === activeIndex ? 'true' : 'false'}`}>Xe bồn {item.name}</button>
+                            </li>
+                        ))}
+                    </ul>
+                    <div className="tab-content" id="myTabContent">
+                        <div className="container">
+                            <div className="row">
+                                <div className="col-md-12">
+                                    <div className="glass">
+                                        <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
+                                            <span style={{ zIndex: '1' }}>{getDataInput.id != null ? ((getDataInput.pumpVolume / getDataInput.requestedVolume) * 100).toFixed(2) : '0'} %</span>
                                         </div>
+                                        <div className="water" style={{ height: animation + '%', maxHeight: '100%' }}></div>
                                     </div>
-                                </div>
-                                <div className="col-md-2 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Cập nhật Motor</span>
-                                        <div className="d-flex justify-content-center align-items-center pt-3">
-                                            <button type="button" className="btn btn-light" onClick={handleUpdateMotor}> Cập nhật
-                                            </button>
-                                        </div>
+                                    <div className="d-flex flex-column">
+                                        {isMotor ? <img src={MoTorOn} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} /> : <img src={MoTorOff} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} />}
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div className="row">
+                            <div><span style={{ fontSize: "30px" }}>Khối lượng (Kg): {pumpValue}</span></div>
+                            <div className="check-scale">
+                                <div className="col-md-12">
+                                    <div className="input-group">
+                                        <div className="col-md-2 px-2">
+                                            <div className="form-check">
+                                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Khách hàng</span>
+                                                <input type="text" className="form-control" id="customer" name="customer" placeholder="#######" value={getDataInput.customer} onChange={(e) => handleOnChange(e)}
+                                                    style={{ textAlign: 'center', fontSize: '30px' }} />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2 px-2">
+                                            <div className="form-check">
+                                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Nguồn hàng</span>
+                                                <input type="text" className="form-control" id="sourceOfGoods" name="sourceOfGoods" placeholder="#######" value={getDataInput.sourceOfGoods} onChange={(e) => handleOnChange(e)}
+                                                    style={{ textAlign: 'center', fontSize: '30px' }} />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2 px-2">
+                                            <div className="form-check">
+                                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Số xe</span>
+                                                <input type="text" className="form-control" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
+                                                    style={{ textAlign: 'center', fontSize: '30px' }} />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2 px-2">
+                                            <div className="form-check">
+                                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Khối lượng yêu cầu</span>
+                                                <input type="text" className="form-control" id="requestedVolume" name="requestedVolume" placeholder="#######" value={getDataInput.requestedVolume} onChange={(e) => handleOnChange(e)}
+                                                    style={{ textAlign: 'center', fontSize: '30px' }} />
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2 px-2">
+                                            <div className="form-check">
+                                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Lưu</span>
+                                                <div className="d-flex justify-content-center align-items-center pt-3">
+                                                    <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-2 px-2">
+                                            <div className="form-check">
+                                                <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Cập nhật Motor</span>
+                                                <div className="d-flex justify-content-center align-items-center pt-3">
+                                                    <button type="button" className="btn btn-light" onClick={handleUpdateMotor}> Cập nhật
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="d-flex align-items-center pt-2">
+                            <div className="buttons me-auto">
+                                <button type="button" className="btn btn-light" onClick={refreshData}>
+                                    <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
+                                </button>
+                                <Print
+                                    index={getDataInput.ordinalNumber}
+                                    product={getDataInput.product}
+                                    customer={getDataInput.customer}
+                                    carNumber={getDataInput.carNumber}
+                                    results={getDataInput.results}
+                                    firstScale={getDataInput.firstScale}
+                                    firstScaleDate={getDataInput.firstScaleDate}
+                                    secondScale={getDataInput.secondScale}
+                                    secondScaleDate={getDataInput.secondScaleDate}
+                                    requestedVolume={getDataInput.requestedVolume}
+                                    pumpVolume={getDataInput.pumpVolume}
+                                    startTimePump={getDataInput.startTimePump}
+                                    endTimePump={getDataInput.endTimePump}
+                                    documents={getDataInput.documents}
+                                    notes={getDataInput.notes}
+                                    styleScale={getDataInput.styleScale}
+                                    isDone={getDataInput.isDone}
+                                />
+                            </div>
+                        </div>
+                        <div className="tab-pane fade show active" id={`${productName === activeIndex ? productName : ''}-tab-pane`} role="tabpanel" aria-labelledby={`${productName === activeIndex ? productName : ''}-tab`} tabIndex="0">
+                            <div className="row pt-3">
+                                <div className="col-sm-12">
+                                    <div className="table-responsive">
+                                        <table id="scale-table" className="table table-striped table-bordered table-hover">
+                                            <thead className="thead-light">
+                                                <tr>
+                                                    <th></th>
+                                                    <th>STT</th>
+                                                    <th>Ngày</th>
+                                                    <th>Khách hàng</th>
+                                                    <th>Sản phẩm</th>
+                                                    <th>Nguồn hàng</th>
+                                                    <th>Số xe</th>
+                                                    <th>Khối lượng yêu cầu (Kg)</th>
+                                                    <th>Khối lượng bơm (Kg)</th>
+                                                    <th>Giờ bắt đầu</th>
+                                                    <th>Giờ kết thúc</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {tankPump.slice(pagesVisited, pagesVisited + limit)
+                                                    .filter(condition => condition.product == productName)
+                                                    .map((item, i) => (
+                                                        <tr key={item.id} onClick={() => {
+                                                            setValueItem(item);
+                                                            colorChangeBox(i)
+                                                        }}
+                                                            className={`${changeColor === i ? 'selected' : ''} ${isCheckValue !== item.struckId && isCheckValue != null ? 'disabled-row' : ''}`}
+                                                        >
+                                                            <td className="text-center">
+                                                                <input type="checkbox"
+                                                                    id={`checkbox-${item.struckId}`}
+                                                                    checked={isCheckValue === item.struckId}
+                                                                />
+                                                            </td>
+                                                            <td>{item.ordinalNumber}</td>
+                                                            <td>{item.startTimePump ? (new Date(item.createDate).toLocaleDateString("en-IN")) : ''}</td>
+                                                            <td>{item.customer}</td>
+                                                            <td>{item.product}</td>
+                                                            <td>{item.sourceOfGoods}</td>
+                                                            <td>{item.carNumber}</td>
+                                                            <td>{item.requestedVolume}</td>
+                                                            <td>{item.pumpVolume}</td>
+                                                            <td>{item.startTimePump ? (new Date(item.startTimePump).toLocaleTimeString("en-US", { hour12: false })) : ''}</td>
+                                                            <td>{item.endTimePump ? (new Date(item.endTimePump).toLocaleTimeString("en-US", { hour12: false })) : ''}</td>
+                                                            <td>{(() => {
+                                                                switch (item.processing) {
+                                                                    case 0: return "Chưa có thông số";
+                                                                    case 1: return "Đang bơm";
+                                                                    case 2: return "Hoàn thành";
+                                                                }
+                                                            })()}</td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <nav aria-label="Page navigation example">
+                                        <ReactPaginate
+                                            previousLabel={'<'}
+                                            nextLabel={'>'}
+                                            breakLabel={'...'}
+                                            pageCount={pageCount}
+                                            marginPagesDisplayed={2}
+                                            pageRangeDisplayed={3}
+                                            onPageChange={handlePageClick}
+                                            containerClassName={'pagination justify-content-end'}
+                                            pageClassName={'page-item'}
+                                            pageLinkClassName={'page-link'}
+                                            previousClassName={'page-item'}
+                                            previousLinkClassName={'page-link'}
+                                            nextClassName={'page-item'}
+                                            nextLinkClassName={'page-link'}
+                                            activeClassName={'active'} />
+                                    </nav>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div className="d-flex align-items-center pt-2">
-                    <div className="buttons me-auto">
-                        <button type="button" className="btn btn-light" onClick={refreshData}>
-                            <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
-                        </button>
-                        <Print
-                            index={getDataInput.ordinalNumber}
-                            product={getDataInput.product}
-                            customer={getDataInput.customer}
-                            carNumber={getDataInput.carNumber}
-                            results={getDataInput.results}
-                            firstScale={getDataInput.firstScale}
-                            firstScaleDate={getDataInput.firstScaleDate}
-                            secondScale={getDataInput.secondScale}
-                            secondScaleDate={getDataInput.secondScaleDate}
-                            requestedVolume={getDataInput.requestedVolume}
-                            pumpVolume={getDataInput.pumpVolume}
-                            startTimePump={getDataInput.startTimePump}
-                            endTimePump={getDataInput.endTimePump}
-                            documents={getDataInput.documents}
-                            notes={getDataInput.notes}
-                            styleScale={getDataInput.styleScale}
-                            isDone={getDataInput.isDone}
+                    <div>
+                        <ToastContainer
+                            position="top-right"
+                            autoClose={2000}
+                            hideProgressBar={false}
+                            newestOnTop={false}
+                            closeOnClick
+                            rtl={false}
+                            pauseOnFocusLoss
+                            draggable
+                            pauseOnHover
+                            theme="light"
                         />
                     </div>
-                </div>
-                <div className="tab-pane fade show active" id={`${productName === activeIndex ? productName : ''}-tab-pane`} role="tabpanel" aria-labelledby={`${productName === activeIndex ? productName : ''}-tab`} tabIndex="0">
-                    <div className="row pt-3">
-                        <div className="col-sm-12">
-                            <div className="table-responsive">
-                                <table id="scale-table" className="table table-striped table-bordered table-hover">
-                                    <thead className="thead-light">
-                                        <tr>
-                                            <th></th>
-                                            <th>STT</th>
-                                            <th>Ngày</th>
-                                            <th>Khách hàng</th>
-                                            <th>Sản phẩm</th>
-                                            <th>Nguồn hàng</th>
-                                            <th>Số xe</th>
-                                            <th>Khối lượng yêu cầu (Kg)</th>
-                                            <th>Khối lượng bơm (Kg)</th>
-                                            <th>Giờ bắt đầu</th>
-                                            <th>Giờ kết thúc</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {tankPump.slice(pagesVisited, pagesVisited + limit)
-                                            .filter(condition => condition.product == productName)
-                                            .map((item, i) => (
-                                                <tr key={i} onClick={() => {
-                                                    setValueItem(item);
-                                                    colorChangeBox(i)
-                                                }}
-                                                    className={`${changeColor === i ? 'selected' : ''} ${isCheckValue !== item.struckId && isCheckValue != null ? 'disabled-row' : ''}`}
-                                                >
-                                                    <td className="text-center">
-                                                        <input type="checkbox"
-                                                            id={`checkbox-${item.struckId}`}
-                                                            checked={isCheckValue === item.struckId}
-                                                        />
-                                                    </td>
-                                                    <td>{item.ordinalNumber}</td>
-                                                    <td>{item.startTimePump ? (new Date(item.createDate).toLocaleDateString("en-IN")) : ''}</td>
-                                                    <td>{item.customer}</td>
-                                                    <td>{item.product}</td>
-                                                    <td>{item.sourceOfGoods}</td>
-                                                    <td>{item.carNumber}</td>
-                                                    <td>{item.requestedVolume}</td>
-                                                    <td>{item.pumpVolume}</td>
-                                                    <td>{item.startTimePump ? (new Date(item.startTimePump).toLocaleTimeString("en-US", { hour12: false })) : ''}</td>
-                                                    <td>{item.endTimePump ? (new Date(item.endTimePump).toLocaleTimeString("en-US", { hour12: false })) : ''}</td>
-                                                    <td>{(() => {
-                                                        switch (item.processing) {
-                                                            case 0: return "Chưa có thông số";
-                                                            case 1: return "Đang bơm";
-                                                            case 2: return "Hoàn thành";
-                                                        }
-                                                    })()}</td>
-                                                </tr>
-                                            ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <nav aria-label="Page navigation example">
-                                <ReactPaginate
-                                    previousLabel={'<'}
-                                    nextLabel={'>'}
-                                    breakLabel={'...'}
-                                    pageCount={pageCount}
-                                    marginPagesDisplayed={2}
-                                    pageRangeDisplayed={3}
-                                    onPageChange={handlePageClick}
-                                    containerClassName={'pagination justify-content-end'}
-                                    pageClassName={'page-item'}
-                                    pageLinkClassName={'page-link'}
-                                    previousClassName={'page-item'}
-                                    previousLinkClassName={'page-link'}
-                                    nextClassName={'page-item'}
-                                    nextLinkClassName={'page-link'}
-                                    activeClassName={'active'} />
-                            </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <ToastContainer
-                    position="top-right"
-                    autoClose={2000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                    theme="light"
-                />
-            </div>
+                </>
+            }
         </>
     )
 }

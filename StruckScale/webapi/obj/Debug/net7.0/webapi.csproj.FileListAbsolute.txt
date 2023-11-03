@@ -152,3 +152,5 @@ D:\Project\StruckScale\StruckScale\webapi\obj\Debug\net7.0\refint\webapi.dll
 D:\Project\StruckScale\StruckScale\webapi\obj\Debug\net7.0\webapi.pdb
 D:\Project\StruckScale\StruckScale\webapi\obj\Debug\net7.0\webapi.genruntimeconfig.cache
 D:\Project\StruckScale\StruckScale\webapi\obj\Debug\net7.0\ref\webapi.dll
+D:\Project\StruckScale\StruckScale\webapi\bin\Debug\net7.0\BCrypt.Net-Next.dll
+D:\Project\StruckScale\StruckScale\webapi\bin\Debug\net7.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

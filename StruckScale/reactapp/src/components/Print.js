@@ -40,60 +40,62 @@ class Print extends React.Component {
                         </div>
                         <div style={{ display: 'flex', padding: '20px 20px 20px 50px' }}>
                             <table style={{ fontSize: '15px', padding: '20px', width: '100%' }} >
-                                <tr>
-                                    <td>- Số Xe</td>
-                                    <td style={{ textTransform: 'uppercase' }}>: {this.props.carNumber}</td>
-                                </tr>
-                                <tr>
-                                    <td>- Trọng lượng xe & hàng</td>
-                                    <td style={{ fontWeight: 'bold' }}>: {Math.max(this.props.firstScale, this.props.secondScale) ? (Math.max(this.props.firstScale, this.props.secondScale)).toLocaleString('en-US') : 0} Kg</td>
-                                    <td>- Ngày giờ: </td>
-                                    <td>: {this.props.secondScaleDate != null ? (
+                                <tbody>
+                                    <tr>
+                                        <td>- Số Xe</td>
+                                        <td style={{ textTransform: 'uppercase' }}>: {this.props.carNumber}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>- Trọng lượng xe & hàng</td>
+                                        <td style={{ fontWeight: 'bold' }}>: {Math.max(this.props.firstScale, this.props.secondScale) ? (Math.max(this.props.firstScale, this.props.secondScale)).toLocaleString('en-US') : 0} Kg</td>
+                                        <td>- Ngày giờ: </td>
+                                        <td>: {this.props.secondScaleDate != null ? (
                                             this.props.styleScale == "Nhập hàng" ? (new Date(this.props.firstScaleDate).toLocaleString('en-IN')) : (new Date(this.props.secondScaleDate).toLocaleString('en-IN'))
                                         ) : (this.props.secondScaleDate === '' ? '' : '')}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>- Trọng lượng xe</td>
-                                    <td style={{ fontWeight: 'bold' }}>: {Math.min(this.props.firstScale, this.props.secondScale) ? (Math.min(this.props.firstScale, this.props.secondScale)).toLocaleString('en-US') : 0} Kg</td>
-                                    <td>- Ngày giờ:</td>
-                                    <td>: {this.props.secondScaleDate != null ? (
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>- Trọng lượng xe</td>
+                                        <td style={{ fontWeight: 'bold' }}>: {Math.min(this.props.firstScale, this.props.secondScale) ? (Math.min(this.props.firstScale, this.props.secondScale)).toLocaleString('en-US') : 0} Kg</td>
+                                        <td>- Ngày giờ:</td>
+                                        <td>: {this.props.secondScaleDate != null ? (
                                             this.props.styleScale == "Nhập hàng" ? (new Date(this.props.secondScaleDate).toLocaleString('en-IN')) : (new Date(this.props.firstScaleDate).toLocaleString('en-IN'))
                                         ) : (this.props.secondScaleDate === '' ? '' : '')}
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>- Trọng lượng hàng</td>
-                                    <td style={{ fontWeight: 'bold' }}>: {this.props.results ? (this.props.results).toLocaleString('en-US') : 0} Kg</td>
-                                </tr>
-                                {this.props.requestedVolume != null && this.props.pumpVolume != null ?
-                                    <>
-                                        <tr>
-                                            <td>- Khối lượng bơm yêu cầu</td>
-                                            <td style={{ fontWeight: 'bold' }}>: {(this.props.requestedVolume)} Kg</td>
-                                            <td>- Ngày giờ </td>
-                                            <td>: {this.props.startTimePump ? (new Date(this.props.startTimePump)).toLocaleString('en-IN') : ''}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>- Khối lượng bơm</td>
-                                            <td style={{ fontWeight: 'bold' }}>: {(this.props.pumpVolume)} Kg</td>
-                                            <td>- Ngày giờ</td>
-                                            <td>: {this.props.endTimePump ? (new Date(this.props.endTimePump)).toLocaleString('en-IN') : ''}</td>
-                                        </tr>
-                                    </>
-                                    : ''}
-                                <tr>
-                                    <td>- Số chứng từ</td>
-                                    <td style={{ textTransform: 'uppercase' }}>: {this.props.documents}</td>
-                                </tr>
-                                <tr>
-                                    <td>- Ghi chú</td>
-                                    <td style={{ textTransform: 'uppercase' }}>: {this.props.notes}</td>
-                                </tr>
-                                <tr>
-                                    <td>- Kiểu cân</td>
-                                    <td style={{ textTransform: 'uppercase' }}>: {this.props.styleScale}</td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>- Trọng lượng hàng</td>
+                                        <td style={{ fontWeight: 'bold' }}>: {this.props.results ? (this.props.results).toLocaleString('en-US') : 0} Kg</td>
+                                    </tr>
+                                    {this.props.requestedVolume != null && this.props.pumpVolume != null ?
+                                        <>
+                                            <tr>
+                                                <td>- Khối lượng bơm yêu cầu</td>
+                                                <td style={{ fontWeight: 'bold' }}>: {(this.props.requestedVolume)} Kg</td>
+                                                <td>- Ngày giờ </td>
+                                                <td>: {this.props.startTimePump ? (new Date(this.props.startTimePump)).toLocaleString('en-IN') : ''}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>- Khối lượng bơm</td>
+                                                <td style={{ fontWeight: 'bold' }}>: {(this.props.pumpVolume)} Kg</td>
+                                                <td>- Ngày giờ</td>
+                                                <td>: {this.props.endTimePump ? (new Date(this.props.endTimePump)).toLocaleString('en-IN') : ''}</td>
+                                            </tr>
+                                        </>
+                                        : ''}
+                                    <tr>
+                                        <td>- Số chứng từ</td>
+                                        <td style={{ textTransform: 'uppercase' }}>: {this.props.documents}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>- Ghi chú</td>
+                                        <td style={{ textTransform: 'uppercase' }}>: {this.props.notes}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>- Kiểu cân</td>
+                                        <td style={{ textTransform: 'uppercase' }}>: {this.props.styleScale}</td>
+                                    </tr>
+                                </tbody>
                             </table>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '20px 0 0 0', textAlign: 'center' }}>

@@ -14,6 +14,6 @@ namespace webapi.Models
         public DateTime? endTimePump { get; set; }
         public DateTime? createDate { get; set; }
         public int processing { get; set; }
-        public int struckID { get; set; }
+        public int? struckID { get; set; }
     }
 }
