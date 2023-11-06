@@ -34,7 +34,7 @@ namespace webapi.Helpers
                 new Claim(ClaimTypes.Role,role.rolesName),
             };
                 var credentials = new SigningCredentials(secureKey, SecurityAlgorithms.HmacSha256Signature);
-                var expires = DateTime.UtcNow.AddSeconds(10); // Token will expire in 8 hour, adjust as needed
+                var expires = DateTime.UtcNow.AddSeconds(20); // Token will expire in 8 hour, adjust as needed
                 var securityToken = new JwtSecurityToken(
                    issuer: _config["AppSettings:ValidIssuer"],
                    audience: _config["AppSettings:ValidAudience"],

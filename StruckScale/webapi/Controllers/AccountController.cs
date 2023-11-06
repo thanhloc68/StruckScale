@@ -36,7 +36,6 @@ namespace webapi.Controllers
                 status = accounts.status,
                 rolesID = accounts.rolesID,
             };
-
             await _dbContext.Account.AddAsync(resultAccount);
             await _dbContext.SaveChangesAsync();
             return Ok(resultAccount);
@@ -58,7 +57,6 @@ namespace webapi.Controllers
             }
             catch (Exception)
             {
-
                 throw;
             }
         }

@@ -17,48 +17,55 @@ const App = () => {
     const navigate = useNavigate();
     const [hideNabar, setHideNavbar] = useState(false);
     // Add a request interceptor
-
-    let token = JSON.parse(localStorage.getItem("token"));
+    const token = JSON.parse(localStorage.getItem("token"));
+    let header;
     if (token) {
-        var header = {
+        header = {
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             "Authorization": `Bearer ${(token.accessToken).replace(/"/g, '')}`
         }
     }
-    axios.interceptors.request.use(function (config) {
+    const axiosInstance = axios.create({
+        baseURL: url + ':7007/api/', // Adjust the base URL
+        headers: header,
+    })
+    axios.interceptors.request.use((config) => {
+        const token = JSON.parse(localStorage.getItem("token"));
         // Do something before request is sent
-        console.log("..Sau khi request");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token.accessToken.replace(/"/g, '')}`;
+        }
         return config;
-    }, function (error) {
+    }, (error) => {
         // Do something with request error
         console.log("..Sau khi request lỗi");
         return Promise.reject(error);
     });
 
     // Add a response interceptor
-    axios.interceptors.response.use(
-        async function (response) {
-            // Any status code that lies within the range of 2xx causes this function to trigger
-            // Do something with the response data
-            console.log("Successful response");
-            return response;
-        },
-        async function (error) {
+    axios.interceptors.response.use((response) => {
+        // Any status code that lies within the range of 2xx causes this function to trigger
+        // Do something with the response data
+        console.log("Successful response");
+        return response;
+    },
+        async (error) => {
             // Any status codes that fall outside the range of 2xx cause this function to trigger
             console.log("Error response");
             const { config, response: { status, data } } = error;
+            console.log(status);
             const originalRequest = config;
             if (status === 401) {
                 console.log("Error response with status 401");
+                console.log(data);
                 const token = JSON.parse(localStorage.getItem("token"));
                 const refreshToken = token.refreshToken;
-                if (data === 'Token Expired') {
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("userName");
-                    navigate("/");
-                }
                 try {
+                    if (data == "Token Expired") {
+                        Logout();
+                        setHideNavbar(true);
+                    }
                     const refreshResponse = await axios.post(url + ':7007/api/Login/refresh-token', { RefreshToken: refreshToken });
                     localStorage.setItem("token", JSON.stringify(refreshResponse.data));
                     originalRequest.headers['Authorization'] = 'Bearer ' + refreshResponse.data.accessToken;
@@ -66,9 +73,6 @@ const App = () => {
                     return axios(originalRequest); // Return the modified originalRequest
                 } catch (err) {
                     // Handle the error when refreshing the token
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("userName");
-                    navigate("/");
                     return Promise.reject(err);
                 }
             }
@@ -78,16 +82,16 @@ const App = () => {
     );
     let username = localStorage.getItem("userName");
     useEffect(() => {
-        if (!token) {
+        if (!username) {
             navigate("/")
         }
         if (window.location.pathname === '/') {
             setHideNavbar(true);
         }
-    }, [])
+    }, [username]);
     const Logout = async () => {
         try {
-            await axios.post(url + ":7007/api/Login/revoke?username=" + username, {}, {
+            await axiosInstance.post("Login/revoke?username=" + username, {}, {
                 headers: header
             }).then(res => {
                 localStorage.removeItem("token")
@@ -123,7 +127,7 @@ const App = () => {
                         </div>
                         <div>
                             <span>Xin Chào : {username} </span>
-                            <button type="button" className="btn btn-outline-secondary" onClick={(e) => Logout(e)}>Đăng xuất</button>
+                            <button type="button" className="btn btn-outline-secondary" onClick={() => Logout()}>Đăng xuất</button>
                         </div>
                     </nav>
                     <div className="row">
