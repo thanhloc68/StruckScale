@@ -16,7 +16,7 @@ namespace webapi.Helpers
             _config = configuration;
             _dbContext = dbcontext;
         }
-        public string generate(Accounts accounts)
+        public string? generate(Accounts accounts)
         {
             var rolesInfo = _dbContext.Roles.FirstOrDefault(x => x.Id == accounts.rolesID);
             var role = _dbContext.Account.Where(x => x.Id == accounts.Id).Select(x => new
@@ -27,28 +27,33 @@ namespace webapi.Helpers
             }).FirstOrDefault();
             if (role != null)
             {
-                var secureKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["AppSettings:Key"]));
-                List<Claim> claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name,accounts.userName),
-                new Claim(ClaimTypes.Role,role.rolesName),
-            };
-                var credentials = new SigningCredentials(secureKey, SecurityAlgorithms.HmacSha256Signature);
-                var expires = DateTime.UtcNow.AddSeconds(20); // Token will expire in 8 hour, adjust as needed
-                var securityToken = new JwtSecurityToken(
-                   issuer: _config["AppSettings:ValidIssuer"],
-                   audience: _config["AppSettings:ValidAudience"],
-                   claims: claims,
-                   notBefore: DateTime.UtcNow,
-                   expires: expires,
-                   signingCredentials: credentials
-               );
-                return new JwtSecurityTokenHandler().WriteToken(securityToken);
+                string? key = _config["AppSettings:Key"];
+                if (!string.IsNullOrEmpty(key))
+                {
+                    var secureKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+                    List<Claim> claims = new List<Claim>();
+                    if (!string.IsNullOrEmpty(accounts.userName))
+                    {
+                        claims.Add(new Claim(ClaimTypes.Name, accounts.userName));
+                    }
+                    if (!string.IsNullOrEmpty(role.rolesName))
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, role.rolesName));
+                    }
+                    var credentials = new SigningCredentials(secureKey, SecurityAlgorithms.HmacSha256Signature);
+                    var expires = DateTime.UtcNow.AddHours(8); // Token will expire in 8 hour, adjust as needed
+                    var securityToken = new JwtSecurityToken(
+                       issuer: _config["AppSettings:ValidIssuer"],
+                       audience: _config["AppSettings:ValidAudience"],
+                       claims: claims,
+                       notBefore: DateTime.UtcNow,
+                       expires: expires,
+                       signingCredentials: credentials
+                   );
+                    return new JwtSecurityTokenHandler().WriteToken(securityToken);
+                }
             }
-            else
-            {
-                return null;
-            }
+            return null;
         }
     }
 }

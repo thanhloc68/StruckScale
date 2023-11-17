@@ -17,6 +17,7 @@ namespace webapi.Controllers
             this._dbContext = dbContext;
         }
         [HttpGet("GetList")]
+        [AllowAnonymous]
         public async Task<ActionResult<StruckScaleInfomation>> GetList()
         {
             try

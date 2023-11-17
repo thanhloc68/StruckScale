@@ -1,6 +1,7 @@
 ﻿/* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { simpleConfirm, SimpleDialogContainer } from 'react-simple-dialogs'
 import ReactPaginate from "react-paginate";
 import Clock from "../components/Clock";
 import Print from "../components/Print";
@@ -15,9 +16,9 @@ import url from '../components/url'
 const ScaleStruck = () => {
     let limit = 12;
     const [loading, setLoading] = useState(false)
-    //Lấy dữ liệu từ danh sách cân
+    // Lấy dữ liệu từ danh sách cân
     const [struckScale, setStruckScale] = useState([])
-    //Lấy dữ liệu lên input text
+    // Lấy dữ liệu lên input text
     const [getDataInput, setDataInput] = useState([{
         id: 0,
         ordinalNumber: 0,
@@ -41,17 +42,17 @@ const ScaleStruck = () => {
         endTimePump: null,
         processing: 0
     }]);
-    //Nhập số cân bằng checkbox
+    // Nhập số cân bằng checkbox
     const [isCheckbox, setCheckbox] = useState(false);
-    //Lấy số trang
+    // Lấy số trang
     const [pageNumber, setPageNumber] = useState(0);
-    //Lấy dữ liệu khách hàng
+    // Lấy dữ liệu khách hàng
     const [selectCustomer, setSelectCustomer] = useState([""]);
-    //Lấy dữ liệu sản phẩm
+    // Lấy dữ liệu sản phẩm
     const [selectProduct, setSelectProduct] = useState([""]);
-    //button hiển thị popup khách hàng
+    // button hiển thị popup khách hàng
     const [buttonPopupCustomer, setButtonPopupCustomer] = useState(false);
-    //button hiển thị popup sản phẩm
+    // button hiển thị popup sản phẩm
     const [buttonPopupProduct, setButtonPopupProduct] = useState(false);
     const [getDataPopup, setDataPopup] = useState([{
         id: 0,
@@ -59,11 +60,12 @@ const ScaleStruck = () => {
         name: "",
         status: "",
     }]);
-    //set cờ cân lần 1 lần 2
+    // set cờ cân lần 1 lần 2
     const [isFirstScale, setIsFirstScale] = useState(false);
     const [isSecondScale, setIsSecondScale] = useState(false);
     const [changeColor, setChangeColor] = useState(-1);
     const [roles, setRoles] = useState(false);
+    const [enableButtonScale, setEnableButtonScale] = useState(false);
     const pagesVisited = pageNumber * limit;
     const pageCount = Math.ceil(struckScale.length / limit);
     const navigate = useNavigate();
@@ -80,53 +82,66 @@ const ScaleStruck = () => {
         navigate('/')
     }
     useEffect(() => {
+        blockInput()
         getList();
         getListProduct();
         getListCustomer();
         let interval = null;
         if (isFirstScale) {
             interval = setInterval(() => {
-                getNumScale();
+                getNumScale()
             }, 2000);
         }
         if (isSecondScale) {
             interval = setInterval(() => {
-                getNumScale();
+                getNumScale()
             }, 2000);
         }
         return () => clearInterval(interval);
-
-    }, [isFirstScale, isSecondScale]);
-    //Lấy api số cân
+    }, [isFirstScale, isSecondScale, roles]);
+    const blockInput = async () => {
+        setEnableButtonScale(true)
+        if (token.roles > 2) {
+            setEnableButtonScale(true)
+            var inputContent = document.getElementsByTagName("input");
+            var textareaContent = document.getElementsByTagName("textarea");
+            var selectContent = document.getElementsByTagName("select");
+            var buttonContent = document.getElementsByTagName("button");
+            var exceptButtonContent = document.getElementById("logOUt");
+            var buttonKeep = [...buttonContent].filter((x) => x !== exceptButtonContent);
+            [...inputContent, ...textareaContent, ...selectContent, ...buttonKeep].forEach((input) => {
+                input.disabled = true;
+            });
+        }
+    }
+    // Lấy api số cân
     const getNumScale = async () => {
         try {
             if (isFirstScale == true) {
-                //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
                 await axios.get(url + ':39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
                         "Access-Control-Allow-Origin": "*",
                     },
                 })
-                    .then(res => setDataInput((prev) => ({ ...prev, firstScale: res.data.readResults[0].v })))
+                    .then(res => setDataInput((prev) => ({ ...prev, firstScale: res.data.readResults[0].v })), setEnableButtonScale(false))
                     .catch(err => { return toast.error(err) })
             }
             if (isFirstScale == false && isSecondScale == true) {
-                //await axios.get('https://127.0.0.1:39320/iotgateway/read?ids=Channel2.USR.ScaleValue')
                 await axios.get(url + ':39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
                         "Access-Control-Allow-Origin": "*",
                     },
                 })
-                    .then(res => setDataInput((prev) => ({ ...prev, secondScale: res.data.readResults[0].v })))
+                    .then(res => setDataInput((prev) => ({ ...prev, secondScale: res.data.readResults[0].v })), setEnableButtonScale(false))
                     .catch(err => { return toast.error(err) })
             }
         } catch (e) {
             return toast.error(e)
         }
     }
-    //Lấy danh sách cân
+    // Lấy danh sách cân
     const getList = async () => {
         try {
             setLoading(true);
@@ -137,15 +152,15 @@ const ScaleStruck = () => {
             })
         } catch (e) {
             if (e.response) {
-                if (e.response.status === "403") {
-                    setRoles(true)
+                if (e.response.status == "403") {
+                    setRoles(true);
                 }
             }
         }
         finally {
             setLoading(false);
         }
-    };
+    }
     const handlePageClick = async (data) => {
         let selectPage = data.selected + 1;
         setPageNumber(selectPage - 1);
@@ -194,6 +209,7 @@ const ScaleStruck = () => {
         if (data.firstScale > 0 && data.secondScale > 0) {
             setIsFirstScale(false);
             setIsSecondScale(false);
+            setEnableButtonScale(true);
         }
     }
     const colorChangeBox = async (selected) => {
@@ -201,6 +217,7 @@ const ScaleStruck = () => {
             setChangeColor(selected)
         }
     }
+    // Refresh
     const handleRefresh = async () => {
         setCheckbox(false);
         setIsFirstScale(false);
@@ -223,7 +240,7 @@ const ScaleStruck = () => {
             isDel: true
         });
     }
-    //Thêm Thông tin khách hàng
+    // Thêm cân
     const handleAdd = async (e) => {
         e.preventDefault();
         const input = {
@@ -246,17 +263,28 @@ const ScaleStruck = () => {
             .then(res => { return toast.success("Thêm thành công"), getList(), handleRefresh() })
             .catch(error => { return toast.error("Lỗi", error) })
     }
-    //Xóa thông tin khách hàng
+    // Xóa cân
     const onDeleteScale = async (id) => {
         try {
             if (id == null) {
-                getList();
+                toast.error("Bạn chưa chọn thông tin cần xóa")
+                return;
             }
-            await axios.delete(url + ':7007/api/Scale/' + id, { headers: header })
-                .then(res => { return toast.success("Xóa thành công"), handleRefresh() })
-            setStruckScale(struckScale.filter(struckScale => struckScale.id !== id || struckScale.isDel == false));
+            if (await simpleConfirm({
+                title: "Thông Báo!",
+                message: 'Bạn có muốn xóa không?',
+                confirmLabel: 'Đồng ý',
+                cancelLabel: 'Hủy',
+            })) {
+                await axios.delete(url + ':7007/api/Scale/' + id, { headers: header })
+                    .then(res => { return toast.success("Xóa thành công"), handleRefresh() })
+                setStruckScale(struckScale.filter(struckScale => struckScale.id !== id || struckScale.isDel == false));
+            } else {
+                toast('Hủy')
+            }
+
         } catch (error) {
-            toast.error(error.response.data)
+            toast.error("Lỗi không xóa được")
         }
     }
     // Cập nhật cân 1,2
@@ -282,7 +310,7 @@ const ScaleStruck = () => {
         });
         setDataPopup(prev => { return { ...prev, selectProduct: updatedProducts } })
     }
-    //Cập nhật số cân lần 1, lần 2
+    // Cập nhật số cân lần 1, lần 2
     const updateScale = async () => {
         await axios.put(url + ':7007/api/Scale/' + getDataInput.id, getDataInput, { headers: header })
             .then(res => {
@@ -290,27 +318,29 @@ const ScaleStruck = () => {
                 if (isFirstScale == true && isSecondScale == false) {
                     setIsFirstScale(false);
                     setIsSecondScale(true);
+                    setEnableButtonScale(true);
                 }
                 if (isFirstScale == false && isSecondScale == true) {
                     setIsFirstScale(false);
                     setIsSecondScale(false);
+                    setEnableButtonScale(true);
                 }
             })
             .catch(error => { toast.error(`Error: ${error.message}`) })
     }
-    //Lấy danh sách khách hàng
+    // Lấy danh sách khách hàng
     const getListCustomer = async () => {
-        const customer = await axios.get(url + ':7007/api/Customer/get', { headers: header })
+        await axios.get(url + ':7007/api/Customer/get', { headers: header })
             .then(res => setSelectCustomer(res.data))
             .catch(err => { return toast.error(err) })
     }
-    //Lấy danh sách sản phẩm
+    // Lấy danh sách sản phẩm
     const getListProduct = async () => {
-        const product = await axios.get(url + ':7007/api/Product/get', { headers: header })
+        await axios.get(url + ':7007/api/Product/get', { headers: header })
             .then(res => setSelectProduct(res.data))
             .catch(err => { return toast.error(err) })
     }
-    //Lấy dữ liệu trong pop up customer
+    // Lấy dữ liệu trong pop up customer
     const setValueData = async (data) => {
         setDataPopup({
             id: data?.id,
@@ -331,7 +361,7 @@ const ScaleStruck = () => {
     }
     const onDeleteCustomer = async (id) => {
         try {
-            const response = await axios.delete(url + ':7007/api/Customer/delete?id=' + id, { headers: header })
+            await axios.delete(url + ':7007/api/Customer/delete?id=' + id, { headers: header })
                 .then(res => { return toast.success("Xóa thành công"), getListCustomer(), handleRefresh() })
                 .catch(error => { return toast.error("Không thể xóa trường này") });
             setSelectCustomer(selectCustomer.filter(selectCustomer => selectCustomer.id !== id));
@@ -365,11 +395,11 @@ const ScaleStruck = () => {
         })
     }
     const updatePopup = async () => {
-        const response = axios.put(url + ':7007/api/Customer/' + getDataPopup.id, getDataPopup, { headers: header })
+        axios.put(url + ':7007/api/Customer/' + getDataPopup.id, getDataPopup, { headers: header })
             .then(res => { toast.success("Cập nhật cân thành công"), getListCustomer(), handleRefreshPopup() })
             .catch(error => { toast.error(`Error: ${error.message}`) })
     }
-    //Lấy dữ liệu trong pop up product
+    // Lấy dữ liệu trong pop up product
     const handleAddPopupProduct = async (e) => {
         e.preventDefault();
         await axios.post(url + ':7007/api/Product/add-product', getDataPopup, { headers: header })
@@ -393,413 +423,414 @@ const ScaleStruck = () => {
     }
     return (
         <>
-            {roles ? "Bạn không có quyền truy cập" :
-                <>
+            <div className="row">
+                <div className="col-md-12">
                     <div className="check-scale">
-                        <div className="form-check">
-                            <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>STT</span>
-                            <input className="form-control" value={getDataInput.ordinalNumber} id="ordinalNumber" name="ordinalNumber" onChange={(e) => handleOnChange(e)}
-                                style={{ textAlign: 'center', width: '76% !important', fontSize: '50px' }} placeholder="ID" />
-                            <div className="d-flex justify-content-center align-items-center">
-                                <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} />
-                                <label className="form-check-label" htmlFor="isCheckScale" style={{ fontSize: 'initial', margin: '0!important', color: 'blue', fontWeight: 'bold', padding: '5px 0 0 10px' }}>
-                                    Nhận số cân
-                                </label>
+                        <div className="input-group">
+                            <div className="col-md-3 px-2 w-15">
+                                <div className="form-check">
+                                    <span className="input-group-addon primary textLabel--style" >STT</span>
+                                    <input className="form-control text--style" value={getDataInput.ordinalNumber} id="ordinalNumber" name="ordinalNumber" onChange={(e) => handleOnChange(e)}
+                                        placeholder="ID" />
+                                    <div className="d-flex justify-content-center align-items-center">
+                                        <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} disabled={enableButtonScale} />
+                                        <label className="form-check-label textLabel--style" htmlFor="isCheckScale" style={{ margin: '0!important', padding: '5px 0 0 10px' }}>
+                                            Nhận số cân
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-md-3 px-2 w-21">
+                                <div className="form-check">
+                                    <span className="input-group-addon primary textLabel--style" >Số Xe</span>
+                                    <input type="text" className="form-control text--style" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="col-md-3 px-2 w-21">
+                                <div className="form-check">
+                                    <span className="input-group-addon primary textLabel--style" >Trọng lượng lần 1</span>
+                                    <input type="text" className="form-control text--style" id="firstScale" name="firstScale" placeholder="#######" value={getDataInput.firstScale ? (getDataInput.firstScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
+                                        disabled />
+                                    <div className="w-100 text-center">
+                                        <span>{getDataInput.firstScaleDate ? new Date(getDataInput.firstScaleDate).toLocaleString() : ''}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-md-3 px-2 w-21">
+                                <div className="form-check">
+                                    <span className="input-group-addon primary textLabel--style">Trọng lượng lần 2</span>
+                                    <input type="text" className="form-control text--style" id="secondScale" name="secondScale" placeholder="#######" value={getDataInput.secondScale ? (getDataInput.secondScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
+                                        disabled />
+                                    <div className="w-100 text-center">
+                                        <span>{getDataInput.secondScaleDate ? new Date(getDataInput.secondScaleDate).toLocaleString() : ''}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-md-3 px-2 w-21">
+                                <div className="form-check">
+                                    <span className="input-group-addon primary textLabel--style" >Trọng lượng hàng</span>
+                                    <input type="text" className="form-control text--style" placeholder="#######" value={Math.abs(getDataInput.firstScale - getDataInput.secondScale) ? (Math.abs(getDataInput.firstScale - getDataInput.secondScale)).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
+                                        disabled />
+                                    <div className="w-100 text-center">
+                                        <span>{getDataInput.styleScale}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div className="col-md-10">
-                            <div className="input-group">
-                                <div className="col-md-3 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</span>
-                                        <input type="text" className="form-control" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '50px' }} />
-                                    </div>
+                    </div>
+                </div>
+            </div>
+            <div className="row pt-3">
+                <div className="col-md-6">
+                    <div className="info-Scale">
+                        <div className="w-100">
+                            <div className="d-flex align-items-center">
+                                <div className="w-25">
+                                    <label style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</label>
                                 </div>
-                                <div className="col-md-3 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 1</span>
-                                        <input type="text" className="form-control" id="firstScale" name="firstScale" placeholder="#######" value={getDataInput.firstScale ? (getDataInput.firstScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '50px' }} disabled />
-                                        <div className="w-100 text-center">
-                                            <span>{getDataInput.firstScaleDate ? new Date(getDataInput.firstScaleDate).toLocaleString() : ''}</span>
-                                        </div>
-                                    </div>
+                                <div className="w-75">
+                                    <input type="text" style={{ width: '85%' }} className="form-control" id="carNumber" name="carNumber" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)} placeholder="Nhập số xe" required />
                                 </div>
-                                <div className="col-md-3 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng lần 2</span>
-                                        <input type="text" className="form-control" id="secondScale" name="secondScale" placeholder="#######" value={getDataInput.secondScale ? (getDataInput.secondScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '50px' }} disabled />
-                                        <div className="w-100 text-center">
-                                            <span>{getDataInput.secondScaleDate ? new Date(getDataInput.secondScaleDate).toLocaleString() : ''}</span>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="info-Document">
+                        <div className="w-100">
+                            <div className="d-flex align-items-center">
+                                <div className="w-25">
+                                    <label style={{ color: 'blue', fontWeight: 'bold' }}>Chứng Từ</label>
                                 </div>
-                                <div className="col-md-3 px-2">
-                                    <div className="form-check">
-                                        <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Trọng lượng hàng</span>
-                                        <input type="text" className="form-control" placeholder="#######" value={Math.abs(getDataInput.firstScale - getDataInput.secondScale) ? (Math.abs(getDataInput.firstScale - getDataInput.secondScale)).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '50px' }} disabled />
-                                        <div className="w-100 text-center">
-                                            <span>{getDataInput.styleScale}</span>
+                                <div className="w-75">
+                                    <input type="text" style={{ width: '85%' }} className="form-control" id="documents" name="documents" value={getDataInput.documents} onChange={(e) => handleOnChange(e)} placeholder="Nhập chứng từ" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="info-Product">
+                        <div className="input-group">
+                            <div className="w-100">
+                                <div className="d-flex align-items-center">
+                                    <div className="w-25">
+                                        <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Hàng Hóa</label>
+                                    </div>
+                                    <div className="w-75">
+                                        <div className="d-flex">
+                                            <div className="w-25">
+                                                <select className="form-select" value={getDataInput.product} onChange={(e) => setDataInput({ ...getDataInput, product: e.target.value })}>
+                                                    <option key="" value="">...</option>
+                                                    {
+                                                        selectProduct.filter(x => x.status == 1).map((item) => <option key={item.id} value={item.name}>{item.shortcutName}</option>)
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div className="w-75 d-flex z-0">
+                                                <input type="text" className="form-control" id="product" name="product" value={getDataInput.product} onChange={(e) => handleOnChange(e)} placeholder="Nhập hàng hóa" required />
+                                                <button type="button" className="btn btn-light" onClick={() => setButtonPopupProduct(true)}>
+                                                    <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="group-item pt-3">
+                    <div className="info-Customer">
+                        <div className="input-group">
+                            <div className="w-100">
+                                <div className="d-flex align-items-center">
+                                    <div className="w-25">
+                                        <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Khách Hàng</label>
+                                    </div>
+                                    <div className="w-75">
+                                        <div className="d-flex">
+                                            <div className="w-25">
+                                                <select className="form-select" value={getDataInput.customer} onChange={(e) => setDataInput({ ...getDataInput, customer: e.target.value })}>
+                                                    <option key="" value="">...</option>
+                                                    {
+                                                        selectCustomer.map((item) => <option key={item.id} value={item.name}>{item.shortcutName}</option>)
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div className="w-75 d-flex z-0">
+                                                <input type="text" className="form-control" id="customer" name="customer" value={getDataInput.customer} onChange={(e) => handleOnChange(e)} placeholder="Nhập tên khách hàng" required />
+                                                <button type="button" className="btn btn-light" onClick={() => setButtonPopupCustomer(true)} >
+                                                    <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-6">
+                    <div className="info-Notes">
+                        <div className="w-100">
+                            <div className="d-flex align-items-center">
+                                <div className="w-25">
+                                    <label style={{ color: 'blue', fontWeight: 'bold' }}>Ghi chú</label>
+                                </div>
+                                <div className="w-75">
+                                    <textarea className="form-control" aria-label="With textarea" id="notes" name="notes" value={getDataInput.notes} onChange={(e) => handleOnChange(e)}
+                                        placeholder="Nhập ghi chú"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className="col-lg-12 col-xs-12">
+                <div className="row align-items-center pt-3">
+                    <div className="col-md-6">
+                        <div className="buttons me-auto">
+                            <button type="button" className="btn btn-light" onClick={handleRefresh}>
+                                <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
+                            </button>
+                            <button type="submit" className="btn btn-light" onClick={(e) => handleAdd(e)}>
+                                <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
+                            </button>
+                            <Print
+                                index={getDataInput.ordinalNumber}
+                                product={getDataInput.product}
+                                customer={getDataInput.customer}
+                                carNumber={getDataInput.carNumber}
+                                results={getDataInput.results}
+                                firstScale={getDataInput.firstScale}
+                                firstScaleDate={getDataInput.firstScaleDate}
+                                secondScale={getDataInput.secondScale}
+                                secondScaleDate={getDataInput.secondScaleDate}
+                                documents={getDataInput.documents}
+                                notes={getDataInput.notes}
+                                styleScale={getDataInput.styleScale}
+                                isDone={getDataInput.isDone}
+                            />
+                            <button type="button" className="btn btn-light" onClick={() => onDeleteScale(getDataInput.id)} >
+                                <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000", fontSize: "30px" }} />
+                            </button>
+                            <SimpleDialogContainer />
+                            <ToastContainer
+                                position="top-right"
+                                autoClose={2000}
+                                hideProgressBar={false}
+                                newestOnTop={false}
+                                closeOnClick
+                                rtl={false}
+                                pauseOnFocusLoss
+                                draggable
+                                pauseOnHover
+                                theme="light"
+                            />
+                        </div>
+                    </div>
+                    <div className="col-md-6 d-flex flex-row-reverse">
+                        <Clock />
+                    </div>
+                </div>
+            </div>
+            <div className="row pt-3">
+                <div className="col-sm-12">
+                    {loading ? (
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "120px" }}>
+                            <FontAwesomeIcon icon={faSpinner} spin style={{ width: "100px", height: "100px" }} />
+                        </div>
+                    ) : (
+                        <div className="table-responsive">
+                            <table id="scale-table" className="table table-striped table-bordered table-hover">
+                                <thead className="thead-light">
+                                    <tr>
+                                        <th>STT</th>
+                                        <th>Số xe</th>
+                                        <th>Chứng Từ</th>
+                                        <th>Khách Hàng</th>
+                                        <th>Hàng Hóa</th>
+                                        <th>Số lần cân 1 (Kg)</th>
+                                        <th>Số lần cân 2 (Kg)</th>
+                                        <th>Kết quả</th>
+                                        <th>Ngày giờ cân lần 1</th>
+                                        <th>Ngày giờ cân lần 2</th>
+                                        <th>Kiểu cân</th>
+                                        <th>Ghi chú</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {struckScale.slice(pagesVisited, pagesVisited + limit).map((item, i) => (
+                                        <tr key={item.struckId} onClick={() => {
+                                            setValueItem(item);
+                                            colorChangeBox(i)
+                                        }} className={changeColor === i ? "selected" : ""} >
+                                            <td>{item.ordinalNumber}</td>
+                                            <td>{item.carNumber}</td>
+                                            <td>{item.documents}</td>
+                                            <td>{item.customer}</td>
+                                            <td>{item.product}</td>
+                                            <td>{item.firstScale.toLocaleString('en-US')} Kg</td>
+                                            <td>{item.secondScale.toLocaleString('en-US')} Kg</td>
+                                            <td>{item.results != null ? item.results.toLocaleString('en-US') : 0} Kg</td>
+                                            <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString("en-IN")) : ''}</td>
+                                            <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString("en-IN")) : ''}</td>
+                                            <td>{item.styleScale}</td>
+                                            <td style={{ wordBreak: 'break-all' }}>{item.notes}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    <nav aria-label="Page navigation example">
+                        <ReactPaginate
+                            previousLabel={'<'}
+                            nextLabel={'>'}
+                            breakLabel={'...'}
+                            pageCount={pageCount}
+                            marginPagesDisplayed={2}
+                            pageRangeDisplayed={3}
+                            onPageChange={handlePageClick}
+                            containerClassName={'pagination justify-content-end'}
+                            pageClassName={'page-item'}
+                            pageLinkClassName={'page-link'}
+                            previousClassName={'page-item'}
+                            previousLinkClassName={'page-link'}
+                            nextClassName={'page-item'}
+                            nextLinkClassName={'page-link'}
+                            activeClassName={'active'} />
+                    </nav>
+                </div>
+            </div>
+            <div>
+                <PopUpCenter trigger={buttonPopupCustomer} setTrigger={setButtonPopupCustomer}>
+                    <h3>Thông Tin Khách Hàng</h3>
+                    <div className="col-md-12">
                         <div className="row">
-                            <div className="col-md-6">
-                                <div className="info-Scale">
-                                    <div className="w-100">
-                                        <div className="d-flex align-items-center">
-                                            <div className="w-25">
-                                                <label style={{ color: 'blue', fontWeight: 'bold' }}>Số Xe</label>
-                                            </div>
-                                            <div className="w-75">
-                                                <input type="text" style={{ width: '85%' }} className="form-control" id="carNumber" name="carNumber" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)} placeholder="Nhập số xe" required />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="info-Document">
-                                    <div className="w-100">
-                                        <div className="d-flex align-items-center">
-                                            <div className="w-25">
-                                                <label style={{ color: 'blue', fontWeight: 'bold' }}>Chứng Từ</label>
-                                            </div>
-                                            <div className="w-75">
-                                                <input type="text" style={{ width: '85%' }} className="form-control" id="documents" name="documents" value={getDataInput.documents} onChange={(e) => handleOnChange(e)} placeholder="Nhập chứng từ" required />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="info-Product">
-                                    <div className="input-group">
-                                        <div className="w-100">
-                                            <div className="d-flex align-items-center">
-                                                <div className="w-25">
-                                                    <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Hàng Hóa</label>
-                                                </div>
-                                                <div className="w-75">
-                                                    <div className="d-flex">
-                                                        <div className="w-25">
-                                                            <select className="form-select" value={getDataInput.product} onChange={(e) => setDataInput({ ...getDataInput, product: e.target.value })}>
-                                                                <option key="" value="">...</option>
-                                                                {
-                                                                    selectProduct.filter(x => x.status == 1).map((item) => <option key={item.id} value={item.name}>{item.shortcutName}</option>)
-                                                                }
-                                                            </select>
-                                                        </div>
-                                                        <div className="w-75 d-flex z-0">
-                                                            <input type="text" className="form-control" id="product" name="product" value={getDataInput.product} onChange={(e) => handleOnChange(e)} placeholder="Nhập hàng hóa" required />
-                                                            <button type="button" className="btn btn-light" onClick={() => setButtonPopupProduct(true)}>
-                                                                <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="info-Customer">
-                                    <div className="input-group">
-                                        <div className="w-100">
-                                            <div className="d-flex align-items-center">
-                                                <div className="w-25">
-                                                    <label style={{ color: 'blue', fontWeight: 'bold' }}>Tên Khách Hàng</label>
-                                                </div>
-                                                <div className="w-75">
-                                                    <div className="d-flex">
-                                                        <div className="w-25">
-                                                            <select className="form-select" value={getDataInput.customer} onChange={(e) => setDataInput({ ...getDataInput, customer: e.target.value })}>
-                                                                <option key="" value="">...</option>
-                                                                {
-                                                                    selectCustomer.map((item) => <option key={item.id} value={item.name}>{item.shortcutName}</option>)
-                                                                }
-                                                            </select>
-                                                        </div>
-                                                        <div className="w-75 d-flex z-0">
-                                                            <input type="text" className="form-control" id="customer" name="customer" value={getDataInput.customer} onChange={(e) => handleOnChange(e)} placeholder="Nhập tên khách hàng" required />
-                                                            <button type="button" className="btn btn-light" onClick={() => setButtonPopupCustomer(true)} >
-                                                                <FontAwesomeIcon icon={faPlusSquare} style={{ color: "blue" }} />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="col-md-4">
+                                <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>ID</label>
+                                <input type="text" style={{ width: '100%' }} className="form-control" id="id" name="id" value={getDataPopup.id} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Id" />
                             </div>
-                            <div className="col-md-6">
-                                <div className="info-Notes">
-                                    <div className="w-100">
-                                        <div className="d-flex align-items-center">
-                                            <div className="w-25">
-                                                <label style={{ color: 'blue', fontWeight: 'bold' }}>Ghi chú</label>
-                                            </div>
-                                            <div className="w-75">
-                                                <textarea className="form-control" aria-label="With textarea" id="notes" name="notes" value={getDataInput.notes} onChange={(e) => handleOnChange(e)}
-                                                    placeholder="Nhập ghi chú" required></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div className="col-md-4">
+                                <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Shortcut Name</label>
+                                <input type="text" style={{ width: '100%' }} className="form-control" id="shortcutName" name="shortcutName" value={getDataPopup.shortcutName} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Shortcut Name" required />
                             </div>
-                        </div>
-                        <div className="d-flex align-items-center pt-2">
-                            <div className="buttons me-auto">
-                                <button type="button" className="btn btn-light" onClick={handleRefresh}>
-                                    <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
-                                </button>
-                                <button type="submit" className="btn btn-light" onClick={(e) => handleAdd(e)}>
-                                    <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
-                                </button>
-                                <Print
-                                    index={getDataInput.ordinalNumber}
-                                    product={getDataInput.product}
-                                    customer={getDataInput.customer}
-                                    carNumber={getDataInput.carNumber}
-                                    results={getDataInput.results}
-                                    firstScale={getDataInput.firstScale}
-                                    firstScaleDate={getDataInput.firstScaleDate}
-                                    secondScale={getDataInput.secondScale}
-                                    secondScaleDate={getDataInput.secondScaleDate}
-                                    documents={getDataInput.documents}
-                                    notes={getDataInput.notes}
-                                    styleScale={getDataInput.styleScale}
-                                    isDone={getDataInput.isDone}
-                                />
-                                <button type="button" className="btn btn-light" onClick={() => onDeleteScale(getDataInput.id)} >
-                                    <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000", fontSize: "30px" }} />
-                                </button>
-                                <ToastContainer
-                                    position="top-right"
-                                    autoClose={2000}
-                                    hideProgressBar={false}
-                                    newestOnTop={false}
-                                    closeOnClick
-                                    rtl={false}
-                                    pauseOnFocusLoss
-                                    draggable
-                                    pauseOnHover
-                                    theme="light"
-                                />
-                            </div>
-                            <div className="ms-auto">
-                                <Clock />
+                            <div className="col-md-4">
+                                <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Name</label>
+                                <input type="text" style={{ width: '100%' }} className="form-control" id="name" name="name" value={getDataPopup.name} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Tên" required />
                             </div>
                         </div>
                     </div>
-                    <div className="row pt-3">
-                        <div className="col-sm-12">
-                            {loading ? (
-                                <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "120px" }}>
-                                    <FontAwesomeIcon icon={faSpinner} spin style={{ width: "100px", height: "100px" }} />
-                                </div>
-                            ) : (
-                                <div className="table-responsive">
-                                    <table id="scale-table" className="table table-striped table-bordered table-hover">
-                                        <thead className="thead-light">
-                                            <tr>
-                                                <th>STT</th>
-                                                <th>Số xe</th>
-                                                <th>Chứng Từ</th>
-                                                <th>Khách Hàng</th>
-                                                <th>Hàng Hóa</th>
-                                                <th>Số lần cân 1 (Kg)</th>
-                                                <th>Số lần cân 2 (Kg)</th>
-                                                <th>Kết quả</th>
-                                                <th>Ngày giờ cân lần 1</th>
-                                                <th>Ngày giờ cân lần 2</th>
-                                                <th>Kiểu cân</th>
-                                                <th>Ghi chú</th>
+                    <div className="p-2 col-md-12">
+                        <button type="button" className="btn btn-light" onClick={handleRefreshPopup}>
+                            <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
+                        </button>
+                        <button type="submit" className="btn btn-light" onClick={(e) => handleAddPopup(e)}>
+                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
+                        </button>
+                        <button type="button" className="btn btn-light" onClick={() => updatePopup(getDataPopup.id)}>
+                            <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} />
+                        </button>
+                    </div>
+                    <div className="pt-3 d-flex justify-content-center">
+                        <div className="table-responsive">
+                            <div className="table-popup d-flex">
+                                <div className="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">#</th>
+                                            <th scope="col">Shortcut Name</th>
+                                            <th scope="col">Full Name</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {selectCustomer.map((item, i) => (
+                                            <tr key={item.id} onClick={() => setValueData(item)}>
+                                                <td>{i + 1}</td>
+                                                <td>{item.shortcutName}</td>
+                                                <td>{item.name}</td>
+                                                <td>
+                                                    <button type="button" className="btn btn-light" onClick={() => onDeleteCustomer(item.id)}>
+                                                        <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} />
+                                                    </button>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {struckScale.slice(pagesVisited, pagesVisited + limit).map((item, i) => (
-                                                <tr key={item.struckId} onClick={() => {
-                                                    setValueItem(item);
-                                                    colorChangeBox(i)
-                                                }} className={changeColor === i ? "selected" : ""} >
-                                                    <td>{item.ordinalNumber}</td>
-                                                    <td>{item.carNumber}</td>
-                                                    <td>{item.documents}</td>
-                                                    <td>{item.customer}</td>
-                                                    <td>{item.product}</td>
-                                                    <td>{item.firstScale.toLocaleString('en-US')} Kg</td>
-                                                    <td>{item.secondScale.toLocaleString('en-US')} Kg</td>
-                                                    <td>{item.results != null ? item.results.toLocaleString('en-US') : 0} Kg</td>
-                                                    <td>{item.firstScaleDate ? (new Date(item.firstScaleDate).toLocaleString("en-IN")) : ''}</td>
-                                                    <td>{item.secondScaleDate ? (new Date(item.secondScaleDate).toLocaleString("en-IN")) : ''}</td>
-                                                    <td>{item.styleScale}</td>
-                                                    <td style={{ wordBreak: 'break-all' }}>{item.notes}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                        ))}
+                                    </tbody>
                                 </div>
-                            )}
-                            <nav aria-label="Page navigation example">
-                                <ReactPaginate
-                                    previousLabel={'<'}
-                                    nextLabel={'>'}
-                                    breakLabel={'...'}
-                                    pageCount={pageCount}
-                                    marginPagesDisplayed={2}
-                                    pageRangeDisplayed={3}
-                                    onPageChange={handlePageClick}
-                                    containerClassName={'pagination justify-content-end'}
-                                    pageClassName={'page-item'}
-                                    pageLinkClassName={'page-link'}
-                                    previousClassName={'page-item'}
-                                    previousLinkClassName={'page-link'}
-                                    nextClassName={'page-item'}
-                                    nextLinkClassName={'page-link'}
-                                    activeClassName={'active'} />
-                            </nav>
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <PopUpCenter trigger={buttonPopupCustomer} setTrigger={setButtonPopupCustomer}>
-                            <h3>Thông Tin Khách Hàng</h3>
-                            <div className="d-flex justify-content-center pd-10">
-                                <div className="w-25">
-                                    <div className="d-flex justify-content-center align-items-center flex-wrap">
-                                        <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>ID</label>
-                                        <input type="text" style={{ width: '30%' }} className="form-control" id="id" name="id" value={getDataPopup.id} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Id" />
-                                    </div>
-                                </div>
-                                <div className="w-35">
-                                    <div className="d-flex justify-content-center align-items-center flex-wrap">
-                                        <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Shortcut Name</label>
-                                        <input type="text" style={{ width: '60%' }} className="form-control" id="shortcutName" name="shortcutName" value={getDataPopup.shortcutName} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Shortcut Name" required />
-                                    </div>
-                                </div>
-                                <div className="w-35">
-                                    <div className="d-flex justify-content-center align-items-center flex-wrap">
-                                        <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Name</label>
-                                        <input type="text" style={{ width: '60%' }} className="form-control" id="name" name="name" value={getDataPopup.name} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Tên" required />
-                                    </div>
-                                </div>
+                </PopUpCenter>
+            </div>
+            <div>
+                <PopUpCenter trigger={buttonPopupProduct} setTrigger={setButtonPopupProduct}>
+                    <h3>Thông Tin Sản Phẩm</h3>
+                    <div className="col-md-12">
+                        <div className="row align-items-center">
+                            <div className="col-md-3">
+                                <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>ID</label>
+                                <input type="text" className="form-control" id="id" name="id" value={getDataPopup.id} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Id" />
                             </div>
-                            <div className="p-2 d-flex align-items-center">
-                                <button type="button" className="btn btn-light" onClick={handleRefreshPopup}>
-                                    <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
-                                </button>
-                                <button type="submit" className="btn btn-light" onClick={(e) => handleAddPopup(e)}>
-                                    <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
-                                </button>
-                                <button type="button" className="btn btn-light" onClick={() => updatePopup(getDataPopup.id)}>
-                                    <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} />
-                                </button>
+                            <div className="col-md-3">
+                                <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Shortcut Name</label>
+                                <input type="text" className="form-control" id="shortcutName" name="shortcutName" value={getDataPopup.shortcutName} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Shortcut Name" required />
                             </div>
-                            <div className="pt-10 d-flex justify-content-center">
-                                <div className="table-popup d-flex">
-                                    <div className="table table-bordered table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col" style={{ width: '50px' }}>#</th>
-                                                <th scope="col" style={{ width: '150px' }}>Shortcut Name</th>
-                                                <th scope="col" style={{ width: '180px' }}>Full Name</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {selectCustomer.map((item, i) => (
-                                                <tr key={item.id} onClick={() => setValueData(item)}>
-                                                    <td>{i + 1}</td>
-                                                    <td>{item.shortcutName}</td>
-                                                    <td>{item.name}</td>
-                                                    <td>
-                                                        <button type="button" className="btn btn-light" onClick={() => onDeleteCustomer(item.id)}>
-                                                            <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </div>
-                                </div>
+                            <div className="col-md-3">
+                                <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Name</label>
+                                <input type="text" className="form-control" id="name" name="name" value={getDataPopup.name} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Tên" required />
                             </div>
-                        </PopUpCenter>
-                    </div>
-                    <div>
-                        <PopUpCenter trigger={buttonPopupProduct} setTrigger={setButtonPopupProduct}>
-                            <h3>Thông Tin Sản Phẩm</h3>
-                            <div className="d-flex justify-content-center pd-10">
-                                <div className="w-25">
-                                    <div className="d-flex justify-content-center align-items-center flex-wrap">
-                                        <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>ID</label>
-                                        <input type="text" style={{ width: '30%' }} className="form-control" id="id" name="id" value={getDataPopup.id} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Id" />
-                                    </div>
-                                </div>
-                                <div className="w-35">
-                                    <div className="d-flex justify-content-center align-items-center flex-wrap">
-                                        <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Shortcut Name</label>
-                                        <input type="text" style={{ width: '60%' }} className="form-control" id="shortcutName" name="shortcutName" value={getDataPopup.shortcutName} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Shortcut Name" required />
-                                    </div>
-                                </div>
-                                <div className="w-35">
-                                    <div className="d-flex justify-content-center align-items-center flex-wrap">
-                                        <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Name</label>
-                                        <input type="text" style={{ width: '60%' }} className="form-control" id="name" name="name" value={getDataPopup.name} onChange={(e) => handleOnChangePopup(e)} placeholder="Nhập Tên" required />
-                                    </div>
-                                </div>
-                                <div className="w-35 d-flex justify-content-center align-items-center flex-wrap">
+                            <div className="col-md-3">
+                                <div className="d-flex justify-content-center align-items-center flex-wrap">
                                     <label style={{ color: 'blue', fontWeight: 'bold', paddingRight: '10px' }}>Status</label>
                                     <input type="checkbox" id="status" name="status" checked={getDataPopup.status} onChange={(e) => handleOnChangePopup(e)} />
                                 </div>
                             </div>
-                            <div className="p-2 d-flex align-items-center">
-                                <button type="button" className="btn btn-light" onClick={handleRefreshPopup}>
-                                    <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
-                                </button>
-                                <button type="submit" className="btn btn-light" onClick={(e) => handleAddPopupProduct(e)}>
-                                    <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
-                                </button>
-                                <button type="button" className="btn btn-light" onClick={() => updatePopupProduct(getDataPopup.id)}>
-                                    <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} />
-                                </button>
-                            </div>
-                            <div className="pt-10 d-flex justify-content-center">
-                                <div className="table-popup d-flex">
-                                    <div className="table table-bordered table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col" style={{ width: '50px' }}>#</th>
-                                                <th scope="col" style={{ width: '150px' }}>Tên viết tắt</th>
-                                                <th scope="col" style={{ width: '180px' }}>Tên sản phẩm</th>
-                                                <th scope="col" style={{ width: '180px' }}>Status</th>
+                        </div>
+                    </div>
+                    <div className="pt-2 col-md-12">
+                        <button type="button" className="btn btn-light" onClick={handleRefreshPopup}>
+                            <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
+                        </button>
+                        <button type="submit" className="btn btn-light" onClick={(e) => handleAddPopupProduct(e)}>
+                            <FontAwesomeIcon icon={faFloppyDisk} style={{ color: "#001DFF", fontSize: "30px" }} />
+                        </button>
+                        <button type="button" className="btn btn-light" onClick={() => updatePopupProduct(getDataPopup.id)}>
+                            <FontAwesomeIcon icon={faEdit} style={{ color: "#000000", fontSize: "30px" }} />
+                        </button>
+                    </div>
+                    <div className="pt-3 d-flex justify-content-center">
+                        <div className="table-responsive">
+                            <div className="table-popup d-flex">
+                                <div className="table table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" style={{ width: '50px' }}>#</th>
+                                            <th scope="col" style={{ width: '150px' }}>Tên viết tắt</th>
+                                            <th scope="col" style={{ width: '180px' }}>Tên sản phẩm</th>
+                                            <th scope="col" style={{ width: '180px' }}>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {selectProduct.map((item, i) => (
+                                            <tr key={item.id} onClick={() => setValueData(item)}>
+                                                <td>{i + 1}</td>
+                                                <td>{item.shortcutName}</td>
+                                                <td>{item.name}</td>
+                                                <td>
+                                                    <input type="checkbox" onChange={(e) => handleCheckboxProduct(e, item.id)} checked={item.status} />
+                                                </td>
+                                                <td>
+                                                    <button type="button" className="btn btn-light" onClick={() => onDeleteProduct(item.id)}>
+                                                        <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} />
+                                                    </button>
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {selectProduct.map((item, i) => (
-                                                <tr key={item.id} onClick={() => setValueData(item)}>
-                                                    <td>{i + 1}</td>
-                                                    <td>{item.shortcutName}</td>
-                                                    <td>{item.name}</td>
-                                                    <td>
-                                                        <input type="checkbox" onChange={(e) => handleCheckboxProduct(e, item.id)} checked={item.status} />
-                                                    </td>
-                                                    <td>
-                                                        <button type="button" className="btn btn-light" onClick={() => onDeleteProduct(item.id)}>
-                                                            <FontAwesomeIcon icon={faCircleStop} style={{ color: "#ff0000" }} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </div>
+                                        ))}
+                                    </tbody>
                                 </div>
                             </div>
-                        </PopUpCenter>
+                        </div>
                     </div>
-                </>
-            }
+                </PopUpCenter>
+            </div>
         </>
     )
 }

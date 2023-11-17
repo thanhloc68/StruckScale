@@ -7,13 +7,12 @@ namespace webapi.Models
     {
         public int id { get; set; }
         public int? ordinalNumber { get; set; }
-        [Required]
+        [Required(ErrorMessage ="Không được để rỗng")]
         public string? carNumber { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Không được để rỗng")]
         public string? product { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Không được để rỗng")]
         public string? customer { get; set; }
-        [Required]
         public string? documents { get; set; }
         public bool? isDel { get; set; }
         public string? notes { get; set; }

@@ -44,48 +44,58 @@ const App = () => {
     });
 
     // Add a response interceptor
+    let isRefreshing = false;
+    let failedQueue = [];
+    const processQueue = (error, token = null) => {
+        failedQueue.forEach(prom => {
+            if (error) {
+                prom.reject(error);
+            } else {
+                prom.resolve(token);
+            }
+        });
+        failedQueue = [];
+    };
     axios.interceptors.response.use((response) => {
-        // Any status code that lies within the range of 2xx causes this function to trigger
-        // Do something with the response data
-        console.log("Successful response");
         return response;
-    },
-        async (error) => {
-            // Any status codes that fall outside the range of 2xx cause this function to trigger
-            console.log("Error response");
-            const { config, response: { status, data } } = error;
-            console.log(status);
-            const originalRequest = config;
-            if (status === 401) {
-                console.log("Error response with status 401");
-                console.log(data);
+    }, async (error) => {
+        const { config, response: { status, data } } = error;
+        const originalRequest = config;
+        if (status === 401) {
+            if (!isRefreshing) {
+                isRefreshing = true;
                 const token = JSON.parse(localStorage.getItem("token"));
                 const refreshToken = token.refreshToken;
-                try {
-                    if (data == "Token Expired") {
-                        Logout();
-                        setHideNavbar(true);
-                    }
-                    const refreshResponse = await axios.post(url + ':7007/api/Login/refresh-token', { RefreshToken: refreshToken });
-                    localStorage.setItem("token", JSON.stringify(refreshResponse.data));
-                    originalRequest.headers['Authorization'] = 'Bearer ' + refreshResponse.data.accessToken;
-                    // Retry the original request
-                    return axios(originalRequest); // Return the modified originalRequest
-                } catch (err) {
-                    // Handle the error when refreshing the token
-                    return Promise.reject(err);
-                }
+                axios.post(url + ':7007/api/Login/refresh-token', { RefreshToken: refreshToken })
+                    .then((response) => {
+                        isRefreshing = false;
+                        localStorage.setItem("token", JSON.stringify(response.data));
+                        axios.defaults.headers.common['Authorization'] = 'Bearer ' + response.data.accessToken
+                        originalRequest.headers['Authorization'] = 'Bearer ' + response.data.accessToken;
+                        processQueue(null, response.data.accessToken);
+                    })
+                    .catch((err) => {
+                        processQueue(err, null);
+                    })
             }
-            // For other error codes, reject the promise
-            return Promise.reject(error);
+            return new Promise(function (resolve, reject) {
+                failedQueue.push({ resolve, reject });
+                if (data === "Token Expired") {
+                    Logout();
+                }
+            }).then(token => {
+                originalRequest.headers['Authorization'] = 'Bearer ' + token;
+                return axios(originalRequest);
+            }).catch(err => {
+                return Promise.reject(err);
+            });
         }
-    );
+        return Promise.reject(error);
+    });
     let username = localStorage.getItem("userName");
     useEffect(() => {
         if (!username) {
-            navigate("/")
-        }
-        if (window.location.pathname === '/') {
+            navigate("/");
             setHideNavbar(true);
         }
     }, [username]);
@@ -103,7 +113,7 @@ const App = () => {
                 if (e.response.status == '401') {
                     localStorage.removeItem("token")
                     localStorage.removeItem("userName")
-                    navigate("/")
+                    window.location.href = '/'
                 }
             }
         }
@@ -127,16 +137,16 @@ const App = () => {
                         </div>
                         <div>
                             <span>Xin Chào : {username} </span>
-                            <button type="button" className="btn btn-outline-secondary" onClick={() => Logout()}>Đăng xuất</button>
+                            <button type="button" id="logOUt" className="btn btn-outline-secondary" onClick={() => Logout()}>Đăng xuất</button>
                         </div>
                     </nav>
                     <div className="row">
-                        <div className="col-md-1 w--10">
+                        <div className="col-md-2 col-sm-2 w-12">
                             <NavBar />
                         </div>
-                        <div className="col-md-11 w--90">
+                        <div className="col-md-10 col-sm-10 w-88">
                             <Routes>
-                                <Route exac path="/" element={<Home />} />
+                                <Route exac path="/Home" element={<Home />} />
                                 <Route exac path="/scalestruck" element={<ScaleStruck />} />
                                 <Route exac path="/tankpump" element={<TankPump />} />
                                 <Route exac path="/report" element={<Report />} />

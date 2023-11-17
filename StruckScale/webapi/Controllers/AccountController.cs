@@ -77,9 +77,9 @@ namespace webapi.Controllers
             }
             catch (Exception)
             {
-                throw;
+                return BadRequest("Không hợp lệ");
             }
-            return Ok();
+            return Ok("Success");
         }
     }
 }

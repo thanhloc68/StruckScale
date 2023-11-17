@@ -36,7 +36,8 @@ namespace webapi.Controllers
                 var option = new TokenModel
                 {
                     AccessToken = jwt,
-                    RefreshToken = refreshToken.Token
+                    RefreshToken = refreshToken.Token,
+                    roles = results.rolesID
                 };
                 return Ok(option);
             }
@@ -62,7 +63,7 @@ namespace webapi.Controllers
             {
                 return Unauthorized("Token Expired");
             }
-            string token = _jwtService.generate(user);
+            string? token = _jwtService.generate(user);
             var newRefreshToken = GenerateRefreshToken();
             SetRefreshToken(newRefreshToken, user.Id);
             var option = new TokenModel

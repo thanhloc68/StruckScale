@@ -8,7 +8,7 @@ namespace webapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     public class ReportController : Controller
     {
         private readonly ScaleInfo _dbContext;
@@ -16,7 +16,7 @@ namespace webapi.Controllers
         {
             _dbContext = dbContext;
         }
-        [HttpGet("getlist/{type}"), Authorize]
+        [HttpGet("getlist/{type}")]
         public async Task<ActionResult<StruckScaleInfomation>> GetListType(string? type, DateTime? startDate, DateTime? endDate, string? search)
         {
             if (type == null) return BadRequest("Invalid type");

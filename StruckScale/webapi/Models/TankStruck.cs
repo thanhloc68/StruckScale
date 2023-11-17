@@ -6,7 +6,7 @@ namespace webapi.Models
     public class TankStrucks
     {
         public int id { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Không được để rỗng")]
         public string? sourceOfGoods { get; set; }
         public int? requestedVolume { get; set; }
         public int? pumpVolume { get; set; }

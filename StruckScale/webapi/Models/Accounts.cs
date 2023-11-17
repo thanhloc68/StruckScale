@@ -5,9 +5,9 @@ namespace webapi.Models
     public class Accounts
     {
         public int Id { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Không được để rỗng")]
         public string? userName { get; set; }
-        [Required]
+        [Required(ErrorMessage = "Không được để rỗng")]
         public string? password { get; set; }
         public bool? status { get; set; }
         public int? rolesID { get; set; }

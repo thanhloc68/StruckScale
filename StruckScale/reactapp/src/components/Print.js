@@ -14,7 +14,7 @@ class Print extends React.Component {
             <>
                 <ReactToPrint
                     trigger={() => {
-                        return <button type="button" className="btn btn-light">
+                        return <button type="button" id="print-data" className="btn btn-light">
                             <FontAwesomeIcon icon={faPrint} style={{ color: "#001DFF", fontSize: "30px" }} />
                         </button>
                     }}

@@ -17,6 +17,7 @@ namespace webapi.Controllers
             _dbContext = dbContext;
         }
         [HttpGet("get")]
+        [AllowAnonymous]
         public async Task<ActionResult<StruckScaleInfomation>> GetList()
         {
             DateTime dateTime = DateTime.Now;
@@ -80,8 +81,7 @@ namespace webapi.Controllers
         [HttpPost("post")]
         public async Task<IActionResult> AddPost(StruckInfo struckScaleInfos)
         {
-         
-            if (struckScaleInfos.carNumber == "" || struckScaleInfos.customer == "" || struckScaleInfos.documents == "" || struckScaleInfos.product == "") return BadRequest();
+            if (struckScaleInfos.carNumber == "" || struckScaleInfos.customer == "" || struckScaleInfos.product == "") return BadRequest();
             int? index = 1;
             DateTime dateTime = DateTime.Now;
             var DayNow = dateTime.AddDays(-1);

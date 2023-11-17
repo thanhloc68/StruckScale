@@ -55,7 +55,7 @@ const Login = () => {
         if (event.key === 'Enter') {
             handleLogin();
         }
-    };
+    }
     return (
         <>
             <section className="vh-100">
@@ -84,7 +84,6 @@ const Login = () => {
                                         style={{ width: "250px", paddingLeft: "2.5rem", paddingRight: "2.5rem" }} onClick={() => handleLogin()} disabled={userName && passWord ? false : true}>
                                         {LoadingApi && <FontAwesomeIcon icon={faSpinner} spin />}&nbsp; Login</button>
                                 </div>
-
                             </form>
                         </div>
                     </div>
@@ -105,5 +104,4 @@ const Login = () => {
         </>
     )
 }
-
 export default Login;

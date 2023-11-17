@@ -8,6 +8,7 @@ namespace webapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ProductController : Controller
     {
         private readonly ScaleInfo _dbContext;
@@ -15,13 +16,13 @@ namespace webapi.Controllers
         {
             _dbContext = dbContext;
         }
-        [HttpGet("get"), Authorize]
+        [HttpGet("get")]
         public async Task<IActionResult> GetProduct()
         {
             var list = await _dbContext.Product.AsNoTracking().ToListAsync();
             return Ok(list);
         }
-        [HttpPost("add-product"), Authorize]
+        [HttpPost("add-product")]
         public async Task<IActionResult> CreateProduct(Product products)
         {
             var resultsProduct = new Product()
@@ -34,7 +35,7 @@ namespace webapi.Controllers
             await _dbContext.SaveChangesAsync();
             return Ok(resultsProduct);
         }
-        [HttpPut("{id}"), Authorize]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateProduct(int id, [FromBody] Product products)
         {
             try
@@ -60,7 +61,7 @@ namespace webapi.Controllers
             }
             return Ok();
         }
-        [HttpDelete("delete"), Authorize]
+        [HttpDelete("delete")]
         public async Task<IActionResult> DeleteProduct(int? id)
         {
             try

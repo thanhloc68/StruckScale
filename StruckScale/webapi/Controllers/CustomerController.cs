@@ -8,6 +8,7 @@ namespace webapi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CustomerController : Controller
     {
         private readonly ScaleInfo _dbContext;
@@ -15,13 +16,13 @@ namespace webapi.Controllers
         {
             _dbContext = dbContext;
         }
-        [HttpGet("get"), Authorize]
+        [HttpGet("get")]
         public async Task<IActionResult> GetCustomer()
         {
             var list = await _dbContext.Customer.AsNoTracking().ToListAsync();
             return Ok(list);
         }
-        [HttpPost("add-customer"), Authorize]
+        [HttpPost("add-customer")]
         public async Task<IActionResult> CreateCustomer(Customer customers)
         {
             var resultsCustomer = new Customer()
@@ -33,7 +34,7 @@ namespace webapi.Controllers
             await _dbContext.SaveChangesAsync();
             return Ok(resultsCustomer);
         }
-        [HttpPut("{id}"), Authorize]
+        [HttpPut("{id}")]
         public async Task<IActionResult> UpdateCustomer(int id, [FromBody] Customer customer)
         {
             try
@@ -58,7 +59,7 @@ namespace webapi.Controllers
             }
             return Ok();
         }
-        [HttpDelete("delete"), Authorize]
+        [HttpDelete("delete")]
         public async Task<IActionResult> DeleteCustomer(int? id)
         {
             try
