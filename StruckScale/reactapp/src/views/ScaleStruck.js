@@ -87,12 +87,12 @@ const ScaleStruck = () => {
         getListProduct();
         getListCustomer();
         let interval = null;
-        if (isFirstScale) {
+        if (isFirstScale && token.roles == 3) {
             interval = setInterval(() => {
                 getNumScale()
             }, 2000);
         }
-        if (isSecondScale) {
+        if (isSecondScale && token.roles == 3) {
             interval = setInterval(() => {
                 getNumScale()
             }, 2000);
@@ -101,14 +101,16 @@ const ScaleStruck = () => {
     }, [isFirstScale, isSecondScale, roles]);
     const blockInput = async () => {
         setEnableButtonScale(true)
-        if (token.roles > 2) {
+        if (token.roles !== 3) {
             setEnableButtonScale(true)
             var inputContent = document.getElementsByTagName("input");
             var textareaContent = document.getElementsByTagName("textarea");
             var selectContent = document.getElementsByTagName("select");
             var buttonContent = document.getElementsByTagName("button");
-            var exceptButtonContent = document.getElementById("logOUt");
-            var buttonKeep = [...buttonContent].filter((x) => x !== exceptButtonContent);
+            var exceptButtonLogOut = document.getElementById("logOUt");
+            var exceptButtonPrint = document.getElementById("print-data");
+            var exceptButtonRefresh = document.getElementById("refresh");
+            var buttonKeep = [...buttonContent].filter((x) => x !== exceptButtonLogOut && x !== exceptButtonPrint && x !== exceptButtonRefresh);
             [...inputContent, ...textareaContent, ...selectContent, ...buttonKeep].forEach((input) => {
                 input.disabled = true;
             });
@@ -117,7 +119,7 @@ const ScaleStruck = () => {
     // Lấy api số cân
     const getNumScale = async () => {
         try {
-            if (isFirstScale == true) {
+            if (isFirstScale == true && token.roles == 3) {
                 await axios.get(url + ':39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
@@ -127,7 +129,7 @@ const ScaleStruck = () => {
                     .then(res => setDataInput((prev) => ({ ...prev, firstScale: res.data.readResults[0].v })), setEnableButtonScale(false))
                     .catch(err => { return toast.error(err) })
             }
-            if (isFirstScale == false && isSecondScale == true) {
+            if (isFirstScale == false && isSecondScale == true && token.roles == 3) {
                 await axios.get(url + ':39320/iotgateway/read?ids=Channel1.Device1.tag1', {
                     headers: {
                         "Content-Type": "application/x-www-form-urlencoded",
@@ -431,7 +433,7 @@ const ScaleStruck = () => {
                                 <div className="form-check">
                                     <span className="input-group-addon primary textLabel--style" >STT</span>
                                     <input className="form-control text--style" value={getDataInput.ordinalNumber} id="ordinalNumber" name="ordinalNumber" onChange={(e) => handleOnChange(e)}
-                                        placeholder="ID" />
+                                        placeholder="ID" readOnly/>
                                     <div className="d-flex justify-content-center align-items-center">
                                         <input className="form-check-input" type="checkbox" id="isCheckScale" onChange={handleCheckbox} checked={isCheckbox} style={{ border: '1px solid' }} disabled={enableButtonScale} />
                                         <label className="form-check-label textLabel--style" htmlFor="isCheckScale" style={{ margin: '0!important', padding: '5px 0 0 10px' }}>
@@ -451,7 +453,7 @@ const ScaleStruck = () => {
                                 <div className="form-check">
                                     <span className="input-group-addon primary textLabel--style" >Trọng lượng lần 1</span>
                                     <input type="text" className="form-control text--style" id="firstScale" name="firstScale" placeholder="#######" value={getDataInput.firstScale ? (getDataInput.firstScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        disabled />
+                                        disabled readOnly/>
                                     <div className="w-100 text-center">
                                         <span>{getDataInput.firstScaleDate ? new Date(getDataInput.firstScaleDate).toLocaleString() : ''}</span>
                                     </div>
@@ -461,7 +463,7 @@ const ScaleStruck = () => {
                                 <div className="form-check">
                                     <span className="input-group-addon primary textLabel--style">Trọng lượng lần 2</span>
                                     <input type="text" className="form-control text--style" id="secondScale" name="secondScale" placeholder="#######" value={getDataInput.secondScale ? (getDataInput.secondScale).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        disabled />
+                                        disabled readOnly/>
                                     <div className="w-100 text-center">
                                         <span>{getDataInput.secondScaleDate ? new Date(getDataInput.secondScaleDate).toLocaleString() : ''}</span>
                                     </div>
@@ -471,7 +473,7 @@ const ScaleStruck = () => {
                                 <div className="form-check">
                                     <span className="input-group-addon primary textLabel--style" >Trọng lượng hàng</span>
                                     <input type="text" className="form-control text--style" placeholder="#######" value={Math.abs(getDataInput.firstScale - getDataInput.secondScale) ? (Math.abs(getDataInput.firstScale - getDataInput.secondScale)).toLocaleString('en-US') : ''} onChange={(e) => handleOnChange(e)}
-                                        disabled />
+                                        disabled readOnly/>
                                     <div className="w-100 text-center">
                                         <span>{getDataInput.styleScale}</span>
                                     </div>
@@ -586,7 +588,7 @@ const ScaleStruck = () => {
                 <div className="row align-items-center pt-3">
                     <div className="col-md-6">
                         <div className="buttons me-auto">
-                            <button type="button" className="btn btn-light" onClick={handleRefresh}>
+                            <button type="button" id="refresh" className="btn btn-light" onClick={handleRefresh}>
                                 <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
                             </button>
                             <button type="submit" className="btn btn-light" onClick={(e) => handleAdd(e)}>

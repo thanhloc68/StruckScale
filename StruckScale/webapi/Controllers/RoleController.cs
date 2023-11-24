@@ -25,9 +25,9 @@ namespace webapi.Controllers
         public async Task<ActionResult> CreateRoles([FromBody] Roles roles)
         {
             if (string.IsNullOrEmpty(roles.RolesName)) return BadRequest("Không được để trống");
-            var existsRole = await _dbContext.Roles.FirstOrDefaultAsync(x => x.RolesName.ToLower() == roles.RolesName.ToLower());
+            var existsRole = await _dbContext.Roles.FirstOrDefaultAsync(x => x.RolesName != null && x.RolesName.ToLower() == roles.RolesName.ToLower());
             if (existsRole != null) return BadRequest("Quyền đã được tạo");
-            var create = new Roles
+            var create = new Roles()
             {
                 RolesName = roles.RolesName
             };

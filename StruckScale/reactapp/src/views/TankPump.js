@@ -60,9 +60,10 @@ const TankPump = () => {
         navigate("/")
     }
     useEffect(() => {
-        blockInputPump();
         getList();
         getProduct();
+        blockInputPump();
+        setAnimation((getDataInput.pumpVolume / getDataInput.requestedVolume) * 100);
         let interval = null;
         let intervalTimeOut = null;
         const getItem = JSON.parse(localStorage.getItem('data-input'));
@@ -77,8 +78,7 @@ const TankPump = () => {
             if (isMotor == true) {
                 interval = setInterval(async () => {
                     await updateTankPump();
-                    setAnimation((getDataInput.pumpVolume / getDataInput.requestedVolume) * 100);
-                }, 1500);
+                }, 1000);
                 if (getDataInput.pumpVolume === getDataInput.requestedVolume) {
                     updateTankPump();
                     localStorage.removeItem('data-input')
@@ -101,22 +101,15 @@ const TankPump = () => {
         }
         return () => { clearInterval(interval); clearTimeout(intervalTimeOut); }
     }, [getDataInput, roles, isMotor])
-
     const blockInputPump = async () => {
-        if (token.roles < 3) {
+        if (token.roles !== 4) {
             var inputContent = document.getElementsByTagName("input");
-            var buttonContent = document.getElementsByTagName("button");
-            var exceptButtonContent = document.getElementById("logOUt");
-            var exceptButtonRefresh = document.getElementById('refreshData');
-            var exceptButtonPrint = document.getElementById('print-data');
-            var buttonKeep = [...buttonContent].filter((x) => x !== exceptButtonContent && x !== exceptButtonPrint && x !== exceptButtonRefresh);
-            console.log(buttonKeep);
-            [...inputContent, ...buttonKeep].forEach((input) => {
+            var exceptButtonUpdateMotor = document.getElementById("updateMotor");
+            [...inputContent, exceptButtonUpdateMotor].forEach((input) => {
                 input.disabled = true;
             })
         }
     }
-
     const getProduct = async () => {
         await axios(url + ':7007/api/Product/get', { headers: header }).then(x => { setProduct(x.data) }).catch(error => console.log(error));
     }
@@ -228,44 +221,58 @@ const TankPump = () => {
         }
     }
     const updateTankPump = async () => {
-        await tankpumpvalue();
-        const response = await axios.put(url + ':7007/api/TankPump/' + getDataInput.id, getDataInput, { headers: header })
-            .then(res => {
-                getList();
-            }).catch(error => { console.log(error) })
+        try {
+            if (token.roles == 4 && isMotor == true && getDataInput.pumpVolume <= getDataInput.requestedVolume) {
+                if (getDataInput.pumpVolume >= getDataInput.requestedVolume) {
+                    setDataInput((prev) => ({ ...prev, processing: 2 }))
+                    return;
+                }
+                const firstResponse = await axios(url + ':39320/iotgateway/read?ids=Channel1.Device1.khoiluongbomxe', {
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "Access-Control-Allow-Origin": "*",
+                        "Access-Control-Allow-Headers": 'Content-Type, X-Auth-Token, Origin, Authorization'
+                    }
+                });
+                const pumpVolume = firstResponse.data.readResults[0].v;
+                setpumpValue(pumpVolume);
+                setDataInput((prev) => ({ ...prev, pumpVolume: pumpVolume }))
+                await axios.put(url + ':7007/api/TankPump/' + getDataInput.id, { ...getDataInput, pumpVolume }, {
+                    headers: header
+                });
+                await getList();
+            }
+        } catch (e) {
+            if (getDataInput.processing === 2) {
+                toast.success('Đã bơm xong');
+            }
+        }
     }
     const isMotorOn = async () => {
         try {
-            const request = await axios(url + ':39320/iotgateway/read?ids=Channel1.Device1.DongCo').then(res => {
+            await axios(url + ':39320/iotgateway/read?ids=Channel1.Device1.DongCo', {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Headers": 'Content-Type, X-Auth-Token, Origin, Authorization'
+                }
+            }).then(res => {
                 setIsMotor(res.data.readResults[0].v)
             })
         } catch (e) {
             console.error('Error fetching motor status:', e);
         }
     }
-    const tankpumpvalue = async () => {
-        if (isMotor == true && getDataInput.pumpVolume <= getDataInput.requestedVolume) {
-            const response = await axios(url + ':39320/iotgateway/read?ids=Channel1.Device1.khoiluongbomxe', {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Headers": 'Content-Type, X-Auth-Token, Origin, Authorization'
-                },
-            }).then(res => {
-                setpumpValue(res.data.readResults[0].v);
-                setDataInput((prev) => ({ ...prev, pumpVolume: res.data.readResults[0].v }))
-            }
-            ).catch(error => { toast.error(error) })
-        }
-    }
     const handleUpdateMotor = async () => {
-        await isMotorOn();
+        if (token.roles == 4) {
+            await isMotorOn();
+        }
         //if (isMotor == false) {
         //    refreshData();
         //}
     }
     const refreshData = () => {
-        if (getDataInput.processing == 1) {
+        if (getDataInput.processing == 1 && token.roles == 4) {
             toast.error("Đang bơm")
         }
         else {
@@ -323,7 +330,7 @@ const TankPump = () => {
                                     <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center' }}>
                                         <span style={{ zIndex: '1' }}>{getDataInput.id != null ? ((getDataInput.pumpVolume / getDataInput.requestedVolume) * 100).toFixed(2) : '0'} %</span>
                                     </div>
-                                    <div className="water" style={{ height: animation + '%', maxHeight: '100%' }}></div>
+                                    <div className="water" style={{ height: animation + '%' }}></div>
                                 </div>
                                 <div className="tankpump d-flex flex-column">
                                     {isMotor ? <img src={MoTorOn} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} /> : <img src={MoTorOff} style={{ maxWidth: '100%', height: '500px', zIndex: '1', imageRendering: 'pixelated' }} />}
@@ -341,7 +348,7 @@ const TankPump = () => {
                                             <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Khách hàng</span>
                                         </div>
                                         <input type="text" className="form-control" id="customer" name="customer" placeholder="#######" value={getDataInput.customer} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '30px' }} />
+                                            style={{ textAlign: 'center', fontSize: '30px' }} disabled readOnly/>
                                     </div>
                                     <div className="col-md-2 px-2">
                                         <div>
@@ -355,7 +362,7 @@ const TankPump = () => {
                                             <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Số xe</span>
                                         </div>
                                         <input type="text" className="form-control" id="carNumber" name="carNumber" placeholder="#######" value={getDataInput.carNumber} onChange={(e) => handleOnChange(e)}
-                                            style={{ textAlign: 'center', fontSize: '30px' }} />
+                                            style={{ textAlign: 'center', fontSize: '30px' }} readOnly disabled />
                                     </div>
                                     <div className="col-md-2 px-2">
                                         <div>
@@ -377,7 +384,7 @@ const TankPump = () => {
                                             <span className="input-group-addon primary px-2" style={{ color: 'blue', fontWeight: 'bold' }}>Cập nhật Motor</span>
                                         </div>
                                         <div className="d-flex justify-content-center align-items-center pt-2">
-                                            <button type="button" className="btn btn-light" onClick={handleUpdateMotor}> Cập nhật
+                                            <button type="button" id="updateMotor" className="btn btn-light" onClick={handleUpdateMotor}> Cập nhật
                                             </button>
                                         </div>
                                     </div>
@@ -390,7 +397,7 @@ const TankPump = () => {
                             <button type="button" id="refreshData" className="btn btn-light" onClick={refreshData}>
                                 <FontAwesomeIcon icon={faFile} style={{ fontSize: "30px" }} />
                             </button>
-                            <Print 
+                            <Print
                                 index={getDataInput.ordinalNumber}
                                 product={getDataInput.product}
                                 customer={getDataInput.customer}

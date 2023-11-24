@@ -51,7 +51,7 @@
     font-weight: bold;
 }
 
-.showTankPump{
+.showTankPump {
     padding-top: 10px
 }
 
@@ -247,12 +247,20 @@ li.nav-item .active {
     .showTankPump {
         height: 300px;
         padding: 15px 0 15px 0;
+        position: relative;
     }
 
         .showTankPump .glass {
             margin: auto;
             height: 100%;
+            width:100%;
             position: static;
+        }
+
+        .showTankPump .water {
+            width: calc(100% - 20px);
+            bottom: 25px;
+            max-height: calc(100% - 40px);
         }
 
     .tankpump {

@@ -98,7 +98,8 @@ namespace webapi.Controllers
                 checkScaleInfo.isDel = false;
                 if (checkTankPump.requestedVolume != 0 && checkTankPump.sourceOfGoods != "")
                 {
-                    checkTankPump.processing = 1; checkTankPump.startTimePump = DateTime.Now;
+                    checkTankPump.processing = 1; 
+                    checkTankPump.startTimePump = DateTime.Now;
                 }
                 _dbContext.Entry(checkTankPump).State = EntityState.Modified;
                 await _dbContext.SaveChangesAsync();
